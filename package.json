@@ -1,0 +1,70 @@
+{
+  "name": "tezos-faucet-2",
+  "version": "0.1.0",
+  "description": "Tezos faucet for testnets",
+  "private": true,
+  "devDependencies": {
+    "@types/react-google-recaptcha": "^2.1.5",
+    "assert": "^2.0.0",
+    "crypto-browserify": "^3.12.0",
+    "events": "^3.3.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0",
+    "util": "^0.12.4"
+  },
+  "dependencies": {
+    "@airgap/beacon-sdk": "^3.1.1",
+    "@craco/craco": "^6.4.5",
+    "@taquito/beacon-wallet": "^13.0.0",
+    "@taquito/signer": "^13.0.0",
+    "@taquito/taquito": "^13.0.0",
+    "@taquito/tezbridge-signer": "^13.0.0",
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.11.44",
+    "@types/react": "^18.0.15",
+    "@types/react-dom": "^18.0.6",
+    "axios": "^0.26.1",
+    "bootstrap": "^5.1.3",
+    "cors": "^2.8.5",
+    "html-react-parser": "^1.4.8",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.2.0",
+    "react-bootstrap-icons": "^1.8.1",
+    "react-dom": "^18.2.0",
+    "react-google-recaptcha": "^2.1.0",
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
