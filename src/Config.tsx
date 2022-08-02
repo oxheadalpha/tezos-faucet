@@ -17,6 +17,9 @@ switch (Config.network.name.toLowerCase()) {
     case "Ghostnet".toLowerCase():
         Config.network.networkType = NetworkType.GHOSTNET;
         break;
+    case "Kathmandunet".toLowerCase():
+        Config.network.networkType = NetworkType.KATHMANDUNET;
+        break;
     default:
         Config.network.networkType = undefined;
 }
