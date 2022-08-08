@@ -4,6 +4,15 @@
 
 One-click faucet for Tezos.
 
+### Made with
+
+- React
+- Craco
+- Typescript
+- Taquito
+- Beacon Wallet
+- ReactBootstrap
+
 ## Overview
 
 This front-end faucet is build on top of a backend (https://github.com/avysel/tezos-faucet-backend).
@@ -43,7 +52,9 @@ Currently supported networks:
 
 To add a new network, first check that `@airgap/beacon-sdk` handles it ([check their config](https://github.com/airgap-it/beacon-sdk/blob/312226a3588eddd804044b52dfcf1d0512f1a9df/packages/beacon-types/src/types/beacon/NetworkType.ts)), then update:
 
-```npm i @airgap/beacon-sdk```
+```
+npm i @airgap/beacon-sdk
+```
 
 And in `Config.tsx`, add the `case` for the new network using `NetworkType`.
 
@@ -100,14 +111,3 @@ Run Docker image:
 ```
 docker run -p 80:80 tezos-faucet
 ```
-
-## Deep inside
-
-### Made with
-
-- React
-- Craco
-- Typescript
-- Taquito
-- Beacon Wallet
-- ReactBootstrap
