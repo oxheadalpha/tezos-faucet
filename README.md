@@ -13,18 +13,26 @@ To setup the faucet for a new network:
 3. Configure faucet to use backend
 4. Deploy faucet
 
-### 1. Update Beacon Wallet configuration for new testnet
 
-Update @airgap/beacon-sdk
+### 1. Update Beacon Wallet configuration for new network
+
+Currently supported networks: 
+
+- Mainnet
+- Ghostnet
+- Ithacanet
+- Jakartanet
+- Kathmandunet
+
+To add a new network, first check that `@airgap/beacon-sdk` handles it ([check their config](https://github.com/airgap-it/beacon-sdk/blob/312226a3588eddd804044b52dfcf1d0512f1a9df/packages/beacon-types/src/types/beacon/NetworkType.ts)), then update:
 
 ```npm i @airgap/beacon-sdk```
 
-
-In `Config.tsx`, add the `case` for the new network using `NetworkType` from the corresponding version of `@airgap/beacon-sdk`
+And in `Config.tsx`, add the `case` for the new network using `NetworkType`.
 
 ### 2. Deploy backend
 
-See <backend url repo here>
+See https://github.com/avysel/tezos-faucet-backend
 
 ### 3. Update configuration file: `config.json`
 
