@@ -5,7 +5,6 @@ import { NetworkType } from "@airgap/beacon-sdk";
 
 type ApplicationConfig = {
     name: string;
-    adminAddress: string;
     googleCaptchaSiteKey: string;
     isBeaconWallet?: boolean;
     backendUrl: string;
@@ -29,7 +28,6 @@ type Network = {
     rpcUrl: string;
     faucetAddress: string;
     viewer: string;
-  //  checksum: string;
     allowSendButton: boolean;
     networkType?: NetworkType | undefined;
 }

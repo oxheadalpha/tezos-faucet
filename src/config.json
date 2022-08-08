@@ -1,20 +1,17 @@
 {
     "application": {
         "name": "Tezos Jakartanet faucet",
-        "adminAddress": "tz1SHho3cRGrpDtobZgA7V8Z2CpKQrbULTFj",
         "googleCaptchaSiteKey": "6LeiK14fAAAAAPptX4v49I4wSrHjOrU2cb_y5oII",
         "backendUrl":"http://localhost:3000",
         "githubRepo":"https://github.com/avysel/tezos-faucet",
         "profiles": {
             "user": {
                 "profile":"USER",
-                "amount": 1,
-                "currency": "XTZ"
+                "amount": 1
             },
             "baker": {
                 "profile":"BAKER",
-                "amount": 6000,
-                "currency": "XTZ"
+                "amount": 6000
             }
         }
     },
@@ -23,7 +20,6 @@
         "rpcUrl": "https://jakartanet.tezos.marigold.dev/",
         "faucetAddress": "tz1cpdS3qoQBYCGohszPWS8Gdya6Wg2e4JnL",
         "viewer": "https://jakarta.tzstats.com",
-        "checksum": "UXNKhVYqVFcItGO21EOYR0SxhjY4h1YwZnYqFkcvhXOWhnSaZkdV9mbLZUbSNmb5REZN10QCF3Ya10SIh1bCFFTOVGR10mbopmcVxUY4x0S3J3ZzA3YnlXWtZDO3M1azRWZ",
         "allowSendButton": true
     }
 }
