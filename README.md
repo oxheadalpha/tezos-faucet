@@ -28,7 +28,7 @@ Sent amounts are configured in backend, using a conf named `profiles`.
 
 Faucet calls backend using the target address and the given profile name. Then backend send as many xtz as configured on its side for the given profile.
 
-This enforces security, avoiding user to change amount in javascript code before call and empty the faucet.
+This enforces security, avoiding user to change amount in front javascript code and dry out the faucet.
 
 ## Setup
 

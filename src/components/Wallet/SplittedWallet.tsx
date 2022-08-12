@@ -99,7 +99,7 @@ function SplittedWallet({ user, testnetContext, network }: { user: UserContext, 
 
                 {(user.userAddress == null || user.userAddress === "") &&
                     <Card.Text>
-                        <Button variant="outline-primary" onClick={connectWallet}>Sync wallet</Button>
+                        <Button variant="outline-primary" onClick={connectWallet}>Connect wallet</Button>
                     </Card.Text>
                 }
             </Card.Body>

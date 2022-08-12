@@ -56,7 +56,6 @@ type BackendResponse = {
 type BackendProfile = {
     profile: string;
     amount: number;
-    currency: string;
 }
 
 export type { ConfigType, Network, UserContext, TestnetContext, BackendResponse, BackendProfile };
