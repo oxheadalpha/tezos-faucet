@@ -25,21 +25,11 @@ jobs:
 
     - name: Login to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-    - name: Docker meta relay
-      id: meta-relay
+    - name: Docker meta
+      id: meta
       uses: docker/metadata-action@v3
       with:
-        images: ghcr.io/${{ github.repository_owner }}/relay
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=match,pattern=v(.*),group=1
-
-    - name: Docker meta endpoint
-      id: meta-endpoint
-      uses: docker/metadata-action@v3
-      with:
-        images: ghcr.io/${{ github.repository_owner }}/baker-endpoint
+        images: ghcr.io/${{ github.repository_owner }}/tezos-faucet
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -49,7 +39,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ${{ steps.meta-relay.outputs.tags }}
+        tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         file: Dockerfile
 
