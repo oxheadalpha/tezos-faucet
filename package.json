@@ -1,5 +1,5 @@
 {
-  "name": "tezos-faucet-2",
+  "name": "tezos-faucet",
   "version": "0.1.0",
   "description": "Tezos faucet for testnets",
   "private": true,

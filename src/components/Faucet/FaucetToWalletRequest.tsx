@@ -2,7 +2,6 @@ import { TezosToolkit } from "@taquito/taquito";
 import { Col, Row } from "react-bootstrap";
 import Config from "../../Config";
 import FaucetRequestButton from "./FaucetRequestButton";
-import FaucetSendButton from "./FaucetSendButton";
 import UserInfo from "./UserInfo";
 
 function FaucetToWalletRequest({ user, network, status, Tezos }: { user: any, network: any, status: any, Tezos: TezosToolkit }) {
@@ -19,12 +18,6 @@ function FaucetToWalletRequest({ user, network, status, Tezos }: { user: any, ne
                 </Col>
                 <Col>
                     <FaucetRequestButton network={network} to={user.userAddress} status={status} profile={Config.application.profiles.baker.profile} amount={Config.application.profiles.baker.amount} />
-                </Col>
-                <Col>
-                    {network.allowSendButton &&
-
-                        <FaucetSendButton network={network} user={user} Tezos={Tezos} status={status} />
-                    }
                 </Col>
             </Row>
         </>

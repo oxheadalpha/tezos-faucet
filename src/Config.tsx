@@ -26,6 +26,4 @@ switch (Config.network.name.toLowerCase()) {
 
 Config.application.isBeaconWallet = (Config.network.networkType !== undefined);
 
-console.log(Config);
-
 export default Config;

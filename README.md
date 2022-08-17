@@ -95,8 +95,6 @@ See https://github.com/avysel/tezos-faucet-backend
 
 ```viewer```: URL of a viewer that displays operation detail like `http://viewer-url.com/{tx_hash}` (eg. https://jakarta.tzstats.com)
 
-`allowSendButton`: true to display 'Send 1 xtz to faucet'. False otherwise.
-
 ### 4. Deploy
 
 Deploy with Docker using Dockerfile.
