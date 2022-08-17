@@ -45,6 +45,8 @@ To setup the faucet for a new network:
 Currently supported networks: 
 
 - Mainnet
+- Mondaynet
+- Dailynet
 - Ghostnet
 - Ithacanet
 - Jakartanet

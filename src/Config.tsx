@@ -8,6 +8,12 @@ switch (Config.network.name.toLowerCase()) {
     case "Mainnet".toLowerCase():
         Config.network.networkType = NetworkType.MAINNET;
         break;
+    case "Mondaynet".toLowerCase():
+        Config.network.networkType = NetworkType.MONDAYNET;
+        break;
+    case "Dailynet".toLowerCase():
+        Config.network.networkType = NetworkType.DAILYNET;
+        break;
     case "Ithacanet".toLowerCase():
         Config.network.networkType = NetworkType.ITHACANET;
         break;
