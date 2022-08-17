@@ -19,7 +19,6 @@
         "name": "Jakartanet",
         "rpcUrl": "https://jakartanet.tezos.marigold.dev/",
         "faucetAddress": "tz1cpdS3qoQBYCGohszPWS8Gdya6Wg2e4JnL",
-        "viewer": "https://jakarta.tzstats.com",
-        "allowSendButton": true
+        "viewer": "https://jakarta.tzstats.com"
     }
 }
