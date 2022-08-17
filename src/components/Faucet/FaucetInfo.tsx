@@ -22,7 +22,6 @@ function FaucetInfo({ faucetAddress, faucetBalance }: { faucetAddress: string, f
 
                 <Badge bg="light" text="dark" className="balance-badge">
                     <DropletFill /> &nbsp; {faucetAddress} &nbsp;
-                    <Badge bg="secondary" as="span" className="balance-badge">{toBalance(faucetBalance)} ꜩ</Badge>
                     &nbsp;
                     <OverlayTrigger
                         key="right"
@@ -43,10 +42,3 @@ function FaucetInfo({ faucetAddress, faucetBalance }: { faucetAddress: string, f
 }
 
 export default FaucetInfo;
-
-/*
-
-                <p><b>Address:</b> {faucetAddress}</p>
-                <p><b>Balance:</b> {toBalance(faucetBalance)} ꜩ</p>
-
-                */
