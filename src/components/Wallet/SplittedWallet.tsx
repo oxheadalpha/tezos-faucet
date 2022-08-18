@@ -48,16 +48,7 @@ function SplittedWallet({ user, testnetContext, network }: { user: UserContext, 
             const wallet = new BeaconWallet({
                 name: Config.application.name,
                 preferredNetwork: network.networkType,
-                disableDefaultEvents: true, // Disable all events / UI. This also disables the pairing alert.
-                eventHandlers: {
-                    // To keep the pairing alert, we have to add the following default event handlers back
-                    [BeaconEvent.PAIR_INIT]: {
-                        handler: defaultEventCallbacks.PAIR_INIT
-                    },
-                    [BeaconEvent.PAIR_SUCCESS]: {
-                        handler: data => console.log(data.publicKey)
-                    }
-                }
+                disableDefaultEvents: false
             });
             testnetContext.Tezos.setWalletProvider(wallet);
             testnetContext.setWallet(wallet);
