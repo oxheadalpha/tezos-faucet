@@ -57,7 +57,6 @@ function FaucetRequestButton({ to, network, status, profile, amount }: { to: str
 
             axios.post(`${Config.application.backendUrl}/send`, txBody)
                 .then((response) => {
-                    console.log("RESPONSE");
                     if(response.status === 200) {
                         console.log(response.data);
                         const responseData: BackendResponse = response.data;
@@ -70,7 +69,7 @@ function FaucetRequestButton({ to, network, status, profile, amount }: { to: str
 
                 })
                 .catch((error) => {
-                    if(error.response && error.response.status === 500) {
+                    if(error.response && (error.response.status === 500 || error.response.status === 400)) {
                         console.log(error?.response?.data);
                         const responseData: BackendResponse = error.response.data;
                         stopLoadingError(`${responseData?.message}`);
