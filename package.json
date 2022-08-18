@@ -1,6 +1,6 @@
 {
   "name": "tezos-faucet",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Tezos faucet for testnets",
   "private": true,
   "devDependencies": {
