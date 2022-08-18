@@ -57,20 +57,27 @@ function FaucetRequestButton({ to, network, status, profile, amount }: { to: str
 
             axios.post(`${Config.application.backendUrl}/send`, txBody)
                 .then((response) => {
-                    console.log(response.data);
-                    const responseData: BackendResponse = response.data;
-                    const viewerUrl = `${network.viewer}/${responseData.txHash}`;
-                    stopLoadingSuccess(`Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`)
+                    console.log("RESPONSE");
+                    if(response.status === 200) {
+                        console.log(response.data);
+                        const responseData: BackendResponse = response.data;
+                        const viewerUrl = `${network.viewer}/${responseData.txHash}`;
+                        stopLoadingSuccess(`Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`)
+                    }
+                    else {
+                        stopLoadingError(`Backend error`);
+                    }
+
                 })
                 .catch((error) => {
-                    if(error.response.data) {
+                    if(error.response && error.response.status === 500) {
                         console.log(error?.response?.data);
                         const responseData: BackendResponse = error.response.data;
                         stopLoadingError(`${responseData?.message}`);
                     }
-                    else{
+                    else {
                         console.log(error);
-                        stopLoadingError("Error");
+                        stopLoadingError(`Backend error`);
                     }
                 });
         }
