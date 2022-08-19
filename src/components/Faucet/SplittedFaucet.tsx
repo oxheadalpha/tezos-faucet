@@ -86,14 +86,3 @@ function SplittedFaucet({ network, user, Tezos }: { network: Network, user: User
 }
 
 export default SplittedFaucet;
-
-/*
-
-                <Row>
-                    <Col>
-                        <FaucetInfo faucetAddress={faucetAddress} faucetBalance={faucetBalance} />
-                        <hr />
-                    </Col>
-                </Row>
-
-                */
