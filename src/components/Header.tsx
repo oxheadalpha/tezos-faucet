@@ -16,11 +16,6 @@ function Header() {
                     <Nav.Link href={Config.application.githubRepo} target="_blank">
                         <Github />
                     </Nav.Link>
-
-                    <Nav.Link href="#" target="_blank">
-                        <Twitter />
-                    </Nav.Link>
-
                 </Nav>
 
             </Container>
