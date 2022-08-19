@@ -16,5 +16,11 @@ footer {
   position: fixed;
   width: 100%;
   bottom: 0;
-  z-index:-1;
+  z-index: -1;
+}
+
+.faucet-part-title {
+  text-align: left;
+  font-weight: bold;
+  margin-bottom: 15px;
 }
