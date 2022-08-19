@@ -11,7 +11,6 @@ function FaucetToWalletRequest({ user, network, status, Tezos }: { user: any, ne
             <div className="faucet-part-user">
                 <UserInfo user={user} displayBalance={true} />
             </div>
-
             <Row>
                 <Col>
                     <FaucetRequestButton network={network} to={user.userAddress} status={status} profile={Config.application.profiles.user.profile} amount={Config.application.profiles.user.amount} />

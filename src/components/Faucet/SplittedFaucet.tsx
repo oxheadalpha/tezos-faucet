@@ -53,11 +53,12 @@ function SplittedFaucet({ network, user, Tezos }: { network: Network, user: User
         <Card>
             <Card.Header>{network.name} faucet</Card.Header>
             <Card.Body>
-
                 <Row>
-                    <Col>
-                        <FaucetInfo faucetAddress={faucetAddress} faucetBalance={faucetBalance} />
-                        <hr />
+                    <Col className="faucet-part-title">
+                        Fund your web wallet
+                    </Col>
+                    <Col className="faucet-part-title">
+                        Or fund any address
                     </Col>
                 </Row>
                 <Row>
@@ -85,3 +86,14 @@ function SplittedFaucet({ network, user, Tezos }: { network: Network, user: User
 }
 
 export default SplittedFaucet;
+
+/*
+
+                <Row>
+                    <Col>
+                        <FaucetInfo faucetAddress={faucetAddress} faucetBalance={faucetBalance} />
+                        <hr />
+                    </Col>
+                </Row>
+
+                */
