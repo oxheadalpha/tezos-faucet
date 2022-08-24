@@ -15,7 +15,7 @@ One-click faucet for Tezos.
 
 ## Overview
 
-This front-end faucet is build on top of a backend (https://github.com/avysel/tezos-faucet-backend).
+This front-end faucet is build on top of a backend (https://github.com/oxheadalpha/tezos-faucet-backend).
 
 Backend handles:
 - faucet private key
@@ -62,7 +62,7 @@ And in `Config.tsx`, add the `case` for the new network using `NetworkType`.
 
 ### 2. Deploy backend
 
-See https://github.com/avysel/tezos-faucet-backend
+See https://github.com/oxheadalpha/tezos-faucet-backend
 
 ### 3. Update configuration file: `config.json`
 
