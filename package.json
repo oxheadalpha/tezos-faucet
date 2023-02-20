@@ -20,7 +20,7 @@
     "util": "^0.12.4"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "^3.1.1",
+    "@airgap/beacon-sdk": "^3.3.4",
     "@craco/craco": "^6.4.5",
     "@taquito/beacon-wallet": "^13.0.0",
     "@taquito/signer": "^13.0.0",
