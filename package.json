@@ -22,9 +22,9 @@
   "dependencies": {
     "@airgap/beacon-sdk": "^3.3.4",
     "@craco/craco": "^6.4.5",
-    "@taquito/beacon-wallet": "^13.0.0",
-    "@taquito/signer": "^13.0.0",
-    "@taquito/taquito": "^13.0.0",
+    "@taquito/beacon-wallet": "^15.1.0",
+    "@taquito/signer": "^15.1.0",
+    "@taquito/taquito": "^15.1.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
