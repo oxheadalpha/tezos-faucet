@@ -7,6 +7,7 @@ ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json ./
 COPY package-lock.json ./
 COPY src ./src
+COPY scripts ./scripts
 COPY public ./public
 COPY tsconfig.json ./tsconfig.json
 
