@@ -16,6 +16,7 @@ COPY tsconfig.json ./tsconfig.json
 COPY entrypoint.sh ./entrypoint.sh
 
 RUN npm run build
+RUN chown -R node:node build
 
 USER node
 
