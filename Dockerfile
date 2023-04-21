@@ -6,13 +6,17 @@ ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package.json ./
 COPY package-lock.json ./
+
+RUN npm install --silent
+
 COPY src ./src
 COPY scripts ./scripts
 COPY public ./public
 COPY tsconfig.json ./tsconfig.json
+COPY entrypoint.sh ./entrypoint.sh
 
-RUN npm install --silent
 RUN npm run build
 
-COPY entrypoint.sh ./entrypoint.sh
+USER node
+
 CMD ["sh", "-c", "/app/entrypoint.sh" ]
