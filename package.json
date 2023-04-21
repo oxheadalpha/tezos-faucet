@@ -21,11 +21,11 @@
     "util": "^0.12.4"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "^3.3.4",
+    "@airgap/beacon-sdk": "^4.0.1",
     "@craco/craco": "^6.4.5",
-    "@taquito/beacon-wallet": "^15.1.0",
-    "@taquito/signer": "^15.1.0",
-    "@taquito/taquito": "^15.1.0",
+    "@taquito/beacon-wallet": "^16.1.2",
+    "@taquito/signer": "^16.1.2",
+    "@taquito/taquito": "^16.1.2",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -48,7 +48,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "npm run check-config && react-scripts build",
+    "build": "npm run check-config && react-scripts build || exit 1",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "check-config": "node ./scripts/configChecker.js"

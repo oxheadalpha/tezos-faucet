@@ -4,15 +4,12 @@ WORKDIR /app
 
 ENV PATH /app/node_modules/.bin:$PATH
 
-COPY package.json ./
-COPY package-lock.json ./
-COPY src ./src
-COPY scripts ./scripts
-COPY public ./public
-COPY tsconfig.json ./tsconfig.json
+RUN chown node:node /app
 
-RUN npm install --silent
-RUN npm run build
+USER node
 
-COPY entrypoint.sh ./entrypoint.sh
+COPY --chown=node:node . ./
+
+RUN npm install
+
 CMD ["sh", "-c", "/app/entrypoint.sh" ]
