@@ -48,7 +48,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "npm run check-config && react-scripts build",
+    "build": "npm run check-config && react-scripts build || exit 1",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "check-config": "node ./scripts/configChecker.js"
