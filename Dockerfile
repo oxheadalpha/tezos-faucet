@@ -1,4 +1,4 @@
-FROM node:16-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /app
 
@@ -8,8 +8,11 @@ RUN chown node:node /app
 
 USER node
 
-COPY --chown=node:node . ./
+COPY --chown=node:node package.json ./
+COPY --chown=node:node package-lock.json ./
 
 RUN npm install
+
+COPY --chown=node:node . ./
 
 CMD ["sh", "-c", "/app/entrypoint.sh" ]
