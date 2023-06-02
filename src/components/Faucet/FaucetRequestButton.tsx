@@ -1,4 +1,4 @@
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useState, useEffect } from "react";
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons";
 import ReCAPTCHA from "react-google-recaptcha";
@@ -6,6 +6,9 @@ import Config from "../../Config";
 import { minifyTezosAddress } from "../../lib/Utils";
 import axios from "axios";
 import { BackendResponse, Network } from "../../lib/Types";
+import * as pyodide from "pyodide"
+
+console.log(pyodide);
 
 function FaucetRequestButton({ to, network, status, profile, amount }: { to: string, network: Network, status: any, profile: string, amount: number }) {
 
