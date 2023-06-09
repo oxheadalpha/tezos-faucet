@@ -109,5 +109,5 @@ docker build . -t tezos-faucet
 
 Run Docker image:
 ```
-docker run -p 80:80 tezos-faucet
+docker run -p 8080:8080 tezos-faucet
 ```
