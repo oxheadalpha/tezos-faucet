@@ -8,6 +8,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Buffer as BufferPolyfill } from "buffer"
 declare var Buffer: typeof BufferPolyfill
 globalThis.Buffer = BufferPolyfill
+import { terminal } from "virtual:terminal"
+declare var Buffer: typeof BufferPolyfill
+globalThis.console = terminal
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

@@ -5,6 +5,7 @@
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@types/react-google-recaptcha": "^2.1.5",
     "@vitejs/plugin-react": "^4.0.0",
     "assert": "^2.0.0",
@@ -20,10 +21,13 @@
     "stream-http": "^3.2.0",
     "url": "^0.11.0",
     "util": "^0.12.5",
-    "vite": "^4.3.9"
+    "vite": "^4.3.9",
+    "vite-plugin-terminal": "^1.1.0",
+    "vite-plugin-wasm": "^3.2.2"
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^4.0.4",
+    "@subspace/vdf": "^0.1.0",
     "@taquito/beacon-wallet": "^16.2.0",
     "@taquito/signer": "^16.2.0",
     "@taquito/taquito": "^16.2.0",
