@@ -33,7 +33,7 @@ import createVdf from "@subspace/vdf"
 // import * as vdf from "../../../pyodide/subspace/output-vdf.mjs"
 // WebAssembly.instantiateStreaming(fetch("../../vdf.wasm")).then(x => x.instance)
 
-function FaucetRequestButton({
+export default function FaucetRequestButton({
   address,
   network,
   status,
@@ -47,11 +47,9 @@ function FaucetRequestButton({
   amount: number
 }) {
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
-  const [show, setShow] = useState(false)
+  const [worker, setWorker] = useState<Worker | null>(null)
+  const [showModal, setShowModal] = useState(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
-
-  const handleClose = () => setShow(false)
-  const handleShow = () => setShow(true)
 
   const startLoading = () => {
     status.setLoading(true)
@@ -74,6 +72,32 @@ function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  const solvePow = async (challenge: string, difficulty: number) => {
+    const powWorker = new Worker("powWorker.js")
+    setWorker(powWorker)
+    powWorker.postMessage({ challenge, difficulty })
+    const powSolution = await new Promise((resolve) =>
+      powWorker.addEventListener("message", (event) => resolve(event.data))
+    )
+    // powWorker.onerror = (event) => {
+    //   console.log(event)
+    // }
+    powWorker.terminate()
+    setWorker(null)
+    console.log({ powSolution })
+    return powSolution
+  }
+
+  const closeModal = () => {
+    if (worker) {
+      worker.terminate()
+      setWorker(null)
+    }
+    setShowModal(false)
+    status.setLoading(false)
+    setLocalLoading(false)
+  }
+
   const getChallenge = async () => {
     startLoading()
 
@@ -83,8 +107,6 @@ function FaucetRequestButton({
       stopLoadingError("Captcha error, please try again in a few minutes.")
       return
     }
-
-    handleShow()
 
 
     const data: any = {
@@ -102,18 +124,8 @@ function FaucetRequestButton({
       if (response.status === 200) {
         const { challenge, difficulty }: any = response.data
         console.log({ challenge, difficulty })
-
-        const worker = new Worker("powWorker.js")
-        worker.postMessage({ challenge, difficulty })
-        const powSolution = await new Promise((resolve) =>
-          worker.addEventListener("message", (event) => resolve(event.data))
-        )
-        // worker.onerror = (event) => {
-        //   console.log(event)
-        // }
-        worker.terminate()
-        console.log({ powSolution })
-
+        setShowModal(true)
+        const powSolution = await solvePow(challenge, difficulty)
         return verifySolution(powSolution)
       } else {
         stopLoadingError("Backend error")
@@ -122,6 +134,7 @@ function FaucetRequestButton({
       console.log(err)
       stopLoadingError("Forbidden")
     }
+    closeModal()
   }
 
   const verifySolution = async ({ nonce, solution }: any) => {
@@ -167,6 +180,7 @@ function FaucetRequestButton({
         stopLoadingError("Backend error")
       }
     }
+    closeModal()
   }
 
   return (
@@ -201,13 +215,13 @@ function FaucetRequestButton({
         )}
       </Button>
 
-      <Modal show={show} onHide={handleClose}>
+      <Modal show={showModal} onHide={closeModal}>
         <Modal.Header closeButton>
           <Modal.Title>Proof of Work Challenge</Modal.Title>
         </Modal.Header>
         <Modal.Body>Solving the PoW challenge...</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
+          <Button variant="secondary" onClick={closeModal}>
             Cancel
           </Button>
         </Modal.Footer>
@@ -215,5 +229,3 @@ function FaucetRequestButton({
     </>
   )
 }
-
-export default FaucetRequestButton
