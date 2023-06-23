@@ -1,5 +1,5 @@
-import React, { RefObject, useState, useEffect } from "react"
-import { Button, Spinner } from "react-bootstrap"
+import React, { useRef, RefObject, useState, useEffect } from "react"
+import { Button, Spinner, Modal, Popover } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
 import Config from "../../Config"
@@ -7,11 +7,13 @@ import { minifyTezosAddress } from "../../lib/Utils"
 import axios from "axios"
 import { BackendResponse, Network } from "../../lib/Types"
 
+// import crypto from "crypto"
+// const crypto = window.crypto
+
 // import * as w from "../../../pyodide/subspace/output-vdf.wasm?init"
 // console.log(w);
 
 import createVdf from "@subspace/vdf"
-import { log } from "console"
 // import {_default as vdf} from "@subspace/vdf"
 
 // import {default as vdf } from "@subspace/vdf"
@@ -32,21 +34,24 @@ import { log } from "console"
 // WebAssembly.instantiateStreaming(fetch("../../vdf.wasm")).then(x => x.instance)
 
 function FaucetRequestButton({
-  to,
+  address,
   network,
   status,
   profile,
   amount,
 }: {
-  to: string
+  address: string
   network: Network
   status: any
   profile: string
   amount: number
 }) {
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
+  const [show, setShow] = useState(false)
+  const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
-  const recaptchaRef: RefObject<ReCAPTCHA> = React.createRef()
+  const handleClose = () => setShow(false)
+  const handleShow = () => setShow(true)
 
   const startLoading = () => {
     status.setLoading(true)
@@ -69,82 +74,49 @@ function FaucetRequestButton({
     setLocalLoading(false)
   }
 
-  const txBody: any = {
-    address: to,
-    // captchaToken: captchaToken,
-    profile: profile,
-  }
-
-  const send = async () => {
-    startLoading()
-
-    try {
-      const captchaToken: any = await recaptchaRef.current?.executeAsync()
-
-      if (!captchaToken) {
-        stopLoadingError("Captcha error, please try again in a few time.")
-        return
-      }
-
-      console.log(txBody)
-      txBody.captchaToken = captchaToken
-
-      axios
-        .post(`${Config.application.backendUrl}/send`, txBody)
-        .then((response) => {
-          if (response.status === 200) {
-            console.log(response)
-            console.log(response.data)
-            const responseData: BackendResponse = response.data
-            const viewerUrl = `${network.viewer}/${responseData.txHash}`
-            stopLoadingSuccess(
-              `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
-            )
-          } else {
-            stopLoadingError(`Backend error`)
-          }
-        })
-        .catch((error) => {
-          if (
-            error.response &&
-            (error.response.status === 500 || error.response.status === 400)
-          ) {
-            console.log(error?.response?.data)
-            const responseData: BackendResponse = error.response.data
-            stopLoadingError(`${responseData?.message}`)
-          } else {
-            console.log(error)
-            stopLoadingError(`Backend error`)
-          }
-        })
-    } catch (err) {
-      console.log(err)
-      stopLoadingError("Forbidden")
-    }
-  }
-
   const getChallenge = async () => {
     startLoading()
-    const vdf = await createVdf()
+
+    const captchaToken: any = await recaptchaRef.current?.executeAsync()
+    recaptchaRef.current?.reset()
+    if (!captchaToken) {
+      stopLoadingError("Captcha error, please try again in a few minutes.")
+      return
+    }
+
+    handleShow()
+
+
+    const data: any = {
+      address,
+      captchaToken,
+      profile,
+    }
 
     try {
       const response = await axios.post(
-        `${Config.application.backendUrl}/send`,
-        txBody
+        `${Config.application.backendUrl}/challenge`,
+        data
       )
 
       if (response.status === 200) {
-        const responseData: any = response.data
-        const { challenge, iterations, size }: any = responseData.vdfChallenge
+        const { challenge, difficulty }: any = response.data
+        console.log({ challenge, difficulty })
 
-        const solution = vdf.generate(iterations, challenge, size, false)
-        console.log({ challenge, size, iterations })
-        // console.log({ solution, challenge, size, iterations })
+        const worker = new Worker("powWorker.js")
+        worker.postMessage({ challenge, difficulty })
+        const powSolution = await new Promise((resolve) =>
+          worker.addEventListener("message", (event) => resolve(event.data))
+        )
+        // worker.onerror = (event) => {
+        //   console.log(event)
+        // }
+        worker.terminate()
+        console.log({ powSolution })
 
-        // Send the solution to the backend
-        return verifySolution(challenge, iterations, size, solution)
+        return verifySolution(powSolution)
       } else {
-        stopLoadingError(`Backend error`)
+        stopLoadingError("Backend error")
       }
     } catch (err) {
       console.log(err)
@@ -152,57 +124,49 @@ function FaucetRequestButton({
     }
   }
 
-  const verifySolution = async (
-    challenge: Uint8Array,
-    iterations: number,
-    size: number,
-    solution: Uint8Array
-  ) => {
-    // Assuming uint8Array is your Uint8Array
-    // let encoder = new TextEncoder()
-    // let uint8ArrayBase64String = btoa(String.fromCharCode.apply(null, solution))
-    const decoder = new TextDecoder("utf8")
-    // @ts-ignore
-    const b64encoded = btoa(String.fromCharCode.apply(null, solution))
-    const verifyBody: any = {
-      address: to,
-      // captchaToken: captchaToken,
-      profile: profile,
-      challenge: challenge,
-      // iterations: 100,
-      iterations: iterations,
-      // size: size,
-      size: 512,
-      // solution: solution,
-      solution: b64encoded,
+  const verifySolution = async ({ nonce, solution }: any) => {
+    const captchaToken = await recaptchaRef.current?.executeAsync()
+    recaptchaRef.current?.reset()
+    if (!captchaToken) {
+      stopLoadingError("Captcha error, please try again in a few minutes.")
+      return
     }
-    console.log( Buffer.from(b64encoded, "base64").toString("hex"));
 
-    return axios
-      .post(`${Config.application.backendUrl}/verify`, verifyBody)
-      .then((response) => {
-        if (response.status === 200) {
-          const responseData: BackendResponse = response.data
-          const viewerUrl = `${network.viewer}/${responseData.txHash}`
-          stopLoadingSuccess(
-            `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
-          )
-        } else {
-          stopLoadingError(`Backend error`)
-        }
-      })
-      .catch((error) => {
-        if (
-          error.response &&
-          (error.response.status === 500 || error.response.status === 400)
-        ) {
-          const responseData: BackendResponse = error.response.data
-          stopLoadingError(`${responseData?.message}`)
-        } else {
-          console.log(error)
-          stopLoadingError(`Backend error`)
-        }
-      })
+    const data: any = {
+      address,
+      captchaToken,
+      profile,
+      nonce,
+      solution,
+    }
+
+    try {
+      const response = await axios.post(
+        `${Config.application.backendUrl}/verify`,
+        data
+      )
+
+      if (response.status === 200) {
+        const responseData: BackendResponse = response.data
+        const viewerUrl = `${network.viewer}/${responseData.txHash}`
+        stopLoadingSuccess(
+          `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
+        )
+      } else {
+        stopLoadingError("Backend error")
+      }
+    } catch (error: any) {
+      if (
+        error.response &&
+        (error.response.status === 500 || error.response.status === 400)
+      ) {
+        const responseData: BackendResponse = error.response.data
+        stopLoadingError(responseData?.message || "")
+      } else {
+        console.log(error)
+        stopLoadingError("Backend error")
+      }
+    }
   }
 
   return (
@@ -215,14 +179,13 @@ function FaucetRequestButton({
 
       <Button
         variant="primary"
-        disabled={status.isLoading || !to}
+        disabled={status.isLoading || !address}
         onClick={getChallenge}
-        // onClick={send}
       >
         <DropletFill />
         &nbsp;
         {isLocalLoading
-          ? `Sending ${amount} ꜩ to ${minifyTezosAddress(to)}`
+          ? `Sending ${amount} ꜩ to ${minifyTezosAddress(address)}`
           : `Request ${amount} ꜩ`}
         &nbsp;{" "}
         {isLocalLoading ? (
@@ -237,6 +200,18 @@ function FaucetRequestButton({
           ""
         )}
       </Button>
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Proof of Work Challenge</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Solving the PoW challenge...</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }

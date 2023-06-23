@@ -13,10 +13,10 @@ function FaucetToWalletRequest({ user, network, status, Tezos }: { user: any, ne
             </div>
             <Row>
                 <Col>
-                    <FaucetRequestButton network={network} to={user.userAddress} status={status} profile={Config.application.profiles.user.profile} amount={Config.application.profiles.user.amount} />
+                    <FaucetRequestButton network={network} address={user.userAddress} status={status} profile={Config.application.profiles.user.profile} amount={Config.application.profiles.user.amount} />
                 </Col>
                 <Col>
-                    <FaucetRequestButton network={network} to={user.userAddress} status={status} profile={Config.application.profiles.baker.profile} amount={Config.application.profiles.baker.amount} />
+                    <FaucetRequestButton network={network} address={user.userAddress} status={status} profile={Config.application.profiles.baker.profile} amount={Config.application.profiles.baker.amount} />
                 </Col>
             </Row>
         </>
