@@ -2,10 +2,12 @@ import React, { useRef, RefObject, useState, useEffect } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
+import axios from "axios"
+
 import Config from "../../Config"
 import { minifyTezosAddress } from "../../lib/Utils"
-import axios from "axios"
 import { BackendResponse, Network } from "../../lib/Types"
+import { StatusContext } from "./SplittedFaucet"
 
 export default function FaucetRequestButton({
   address,
@@ -16,7 +18,7 @@ export default function FaucetRequestButton({
 }: {
   address: string
   network: Network
-  status: any
+  status: StatusContext
   profile: string
   amount: number
 }) {
@@ -26,8 +28,8 @@ export default function FaucetRequestButton({
   const startLoading = () => {
     status.setLoading(true)
     setLocalLoading(true)
-    status.setStatus(null)
-    status.setStatusType(null)
+    status.setStatus("")
+    status.setStatusType("")
   }
 
   const stopLoadingSuccess = (message: string) => {

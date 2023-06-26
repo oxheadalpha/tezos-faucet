@@ -6,18 +6,18 @@ import FaucetToWalletRequest from "./FaucetToWalletRequest"
 import FaucetToInputRequest from "./FaucetToInputRequest"
 import { Network, UserContext } from "../../lib/Types"
 
-type StatusContext = {
+export type StatusContext = {
   isLoading: boolean
-  statusType: string
-  status: string
   setLoading: Dispatch<SetStateAction<boolean>>
-  setStatusType: Dispatch<SetStateAction<string>>
+  status: string
   setStatus: Dispatch<SetStateAction<string>>
+  statusType: string
+  setStatusType: Dispatch<SetStateAction<string>>
   powWorker: Worker | null
   setPowWorker: Dispatch<SetStateAction<Worker | null>>
 }
 
-function SplittedFaucet({
+export default function SplittedFaucet({
   network,
   user,
   Tezos,
@@ -28,7 +28,6 @@ function SplittedFaucet({
 }) {
   const faucetAddress = network.faucetAddress
   const [faucetBalance, setFaucetBalance] = useState<number>(0)
-
   const [isLoading, setLoading] = useState<boolean>(false)
   const [status, setStatus] = useState<string>("")
   const [statusType, setStatusType] = useState<string>("")
@@ -37,13 +36,13 @@ function SplittedFaucet({
 
   const statusContext: StatusContext = {
     isLoading,
-    statusType,
-    status,
     setLoading,
-    setStatusType,
+    status,
     setStatus,
+    statusType,
+    setStatusType,
     powWorker,
-    setPowWorker, // Add the worker and its setter to the context
+    setPowWorker,
   }
 
   const readBalances = async (): Promise<void> => {
@@ -122,5 +121,3 @@ function SplittedFaucet({
     </Card>
   )
 }
-
-export default SplittedFaucet
