@@ -1,37 +1,11 @@
 import React, { useRef, RefObject, useState, useEffect } from "react"
-import { Button, Spinner, Modal, Popover } from "react-bootstrap"
+import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
 import Config from "../../Config"
 import { minifyTezosAddress } from "../../lib/Utils"
 import axios from "axios"
 import { BackendResponse, Network } from "../../lib/Types"
-
-// import crypto from "crypto"
-// const crypto = window.crypto
-
-// import * as w from "../../../pyodide/subspace/output-vdf.wasm?init"
-// console.log(w);
-
-import createVdf from "@subspace/vdf"
-// import {_default as vdf} from "@subspace/vdf"
-
-// import {default as vdf } from "@subspace/vdf"
-
-// const vdf = require("../../../pyodide/subspace/src/vdf")
-// import vdf from "../../../pyodide/subspace/src/vdf"
-// @ts-ignoreXXX
-// console.log(vdf())
-// vdf().then((v) => {
-// const c = v.generate(100000, "aa", 512)
-//   console.log(c)
-//   const s = Buffer.from(c).toString("hex")
-//   console.log(s)
-//   console.log(v.verify(100000, "aa", c, 512))
-// })
-
-// import * as vdf from "../../../pyodide/subspace/output-vdf.mjs"
-// WebAssembly.instantiateStreaming(fetch("../../vdf.wasm")).then(x => x.instance)
 
 export default function FaucetRequestButton({
   address,
@@ -47,8 +21,6 @@ export default function FaucetRequestButton({
   amount: number
 }) {
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
-  const [worker, setWorker] = useState<Worker | null>(null)
-  const [showModal, setShowModal] = useState(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
   const startLoading = () => {
@@ -72,50 +44,56 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  // Ensure that isLocalLoading is false if worker was terminated
+  useEffect(() => {
+    !status.powWorker && setLocalLoading(false)
+  }, [status.powWorker])
+
   const solvePow = async (challenge: string, difficulty: number) => {
+    status.setStatusType("info")
+    status.setStatus("Solving PoW challenge...")
+
+    // There shouldn't be another worker running
+    if (status.powWorker) status.powWorker.terminate()
     const powWorker = new Worker("powWorker.js")
-    setWorker(powWorker)
+    status.setPowWorker(powWorker)
+
     powWorker.postMessage({ challenge, difficulty })
-    const powSolution = await new Promise((resolve) =>
+    const powSolution = await new Promise((resolve, reject) => {
       powWorker.addEventListener("message", (event) => resolve(event.data))
-    )
-    // powWorker.onerror = (event) => {
-    //   console.log(event)
-    // }
+      powWorker.addEventListener("error", () => {
+        reject("Worker has been terminated")
+        console.log("DSFSDFSDF")
+      })
+    })
+
+    powWorker.onerror = (event) => {
+      console.log("ON ERROR", event)
+    }
+
     powWorker.terminate()
-    setWorker(null)
+    status.setPowWorker(null)
     console.log({ powSolution })
     return powSolution
   }
 
-  const closeModal = () => {
-    if (worker) {
-      worker.terminate()
-      setWorker(null)
-    }
-    setShowModal(false)
-    status.setLoading(false)
-    setLocalLoading(false)
-  }
-
   const getChallenge = async () => {
-    startLoading()
-
     const captchaToken: any = await recaptchaRef.current?.executeAsync()
+
     recaptchaRef.current?.reset()
     if (!captchaToken) {
       stopLoadingError("Captcha error, please try again in a few minutes.")
       return
     }
 
-
-    const data: any = {
-      address,
-      captchaToken,
-      profile,
-    }
+    startLoading()
 
     try {
+      const data: any = {
+        address,
+        captchaToken,
+        profile,
+      }
       const response = await axios.post(
         `${Config.application.backendUrl}/challenge`,
         data
@@ -124,7 +102,6 @@ export default function FaucetRequestButton({
       if (response.status === 200) {
         const { challenge, difficulty }: any = response.data
         console.log({ challenge, difficulty })
-        setShowModal(true)
         const powSolution = await solvePow(challenge, difficulty)
         return verifySolution(powSolution)
       } else {
@@ -134,7 +111,6 @@ export default function FaucetRequestButton({
       console.log(err)
       stopLoadingError("Forbidden")
     }
-    closeModal()
   }
 
   const verifySolution = async ({ nonce, solution }: any) => {
@@ -142,6 +118,7 @@ export default function FaucetRequestButton({
     recaptchaRef.current?.reset()
     if (!captchaToken) {
       stopLoadingError("Captcha error, please try again in a few minutes.")
+      // closeModal()
       return
     }
 
@@ -180,7 +157,6 @@ export default function FaucetRequestButton({
         stopLoadingError("Backend error")
       }
     }
-    closeModal()
   }
 
   return (
@@ -189,6 +165,7 @@ export default function FaucetRequestButton({
         ref={recaptchaRef}
         size="invisible"
         sitekey={Config.application.googleCaptchaSiteKey}
+        // onExpired={() => console.log("DFDSFDSFS")}
       />
 
       <Button
@@ -214,18 +191,6 @@ export default function FaucetRequestButton({
           ""
         )}
       </Button>
-
-      <Modal show={showModal} onHide={closeModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Proof of Work Challenge</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Solving the PoW challenge...</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeModal}>
-            Cancel
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   )
 }

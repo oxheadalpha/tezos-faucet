@@ -12,9 +12,10 @@ const sha256 = async (input) => {
 
 self.addEventListener("message", async ({ data }) => {
   const { challenge, difficulty } = data
+  // self.close()
+  // self.terminate()
   let nonce = 0
   let solution = ""
-
   console.time("START")
   while (true) {
     const data = `${challenge}:${nonce}`

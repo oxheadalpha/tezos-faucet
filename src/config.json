@@ -1,19 +1,19 @@
 {
     "application": {
-        "name": "Tezos Jakartanet faucet",
-        "googleCaptchaSiteKey": "6LeiK14fAAAAAPptX4v49I4wSrHjOrU2cb_y5oII",
-        "backendUrl":"http://localhost:3000",
-        "githubRepo":"https://github.com/oxheadalpha/tezos-faucet",
-        "profiles": {
-            "user": {
-                "profile":"USER",
-                "amount": 1
-            },
-            "baker": {
-                "profile":"BAKER",
-                "amount": 6000
-            }
+      "name": "Tezos Jakartanet faucet",
+      "googleCaptchaSiteKey": "6LefC8QmAAAAAIXuoOhyI-FtALkYXZm4JK0GBYfb",
+      "backendUrl": "http://localhost:3000",
+      "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
+      "profiles": {
+        "user": {
+          "profile": "USER",
+          "amount": 1
+        },
+        "baker": {
+          "profile": "BAKER",
+          "amount": 6000
         }
+      }
     },
     "network": {
         "name": "Jakartanet",
