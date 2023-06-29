@@ -31,7 +31,7 @@ function FaucetToInputRequest({ network, status }: { network: any, status: any }
     return (
         <>
             <Form.Group className="faucet-address-to">
-                <Form.Control type="text" placeholder="Wallet address" id={inputId} onChange={handleInput} className={inputClass} />
+                <Form.Control type="text" placeholder="Wallet address" id={inputId} onChange={handleInput} className={inputClass} disabled={status.isLoading}/>
             </Form.Group>
             <Row>
                 <Col>
