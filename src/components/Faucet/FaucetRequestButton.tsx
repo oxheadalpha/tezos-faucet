@@ -46,10 +46,11 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
-  // Ensure that isLocalLoading is false if worker was terminated
+  // Ensure that `isLocalLoading` is false if user canceled pow worker.
+  // `status.isLoading` will be false.
   useEffect(() => {
-    !status.powWorker && setLocalLoading(false)
-  }, [status.powWorker])
+    !status.isLoading && setLocalLoading(false)
+  }, [status.isLoading])
 
   const solvePow = async (challenge: string, difficulty: number) => {
     status.setStatusType("info")
@@ -104,8 +105,8 @@ export default function FaucetRequestButton({
       if (response.status === 200) {
         const { challenge, difficulty }: any = response.data
         console.log({ challenge, difficulty })
-        const powSolution = await solvePow(challenge, difficulty)
-        return verifySolution(powSolution)
+        const powSolution: any = await solvePow(challenge, difficulty)
+        return verifySolution({ challenge, ...powSolution })
       } else {
         stopLoadingError("Backend error")
       }
@@ -115,37 +116,60 @@ export default function FaucetRequestButton({
     }
   }
 
-  const verifySolution = async ({ nonce, solution }: any) => {
-    const captchaToken = await recaptchaRef.current?.executeAsync()
-    recaptchaRef.current?.reset()
-    if (!captchaToken) {
-      stopLoadingError("Captcha error, please try again in a few minutes.")
-      // closeModal()
-      return
-    }
+  const verifySolution = async ({ challenge, nonce, solution }: any) => {
+    // const captchaToken = await recaptchaRef.current?.executeAsync()
+    // recaptchaRef.current?.reset()
+    // if (!captchaToken) {
+    //   stopLoadingError("Captcha error, please try again in a few minutes.")
+    //   // closeModal()
+    //   return
+    // }
 
-    const data: any = {
+    let data: any = {
       address,
-      captchaToken,
+      // captchaToken,
       profile,
       nonce,
       solution,
     }
 
     try {
-      const response = await axios.post(
-        `${Config.application.backendUrl}/verify`,
-        data
-      )
-
-      if (response.status === 200) {
-        const responseData: BackendResponse = response.data
-        const viewerUrl = `${network.viewer}/${responseData.txHash}`
-        stopLoadingSuccess(
-          `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
+      while (challenge) {
+        const captchaToken = await recaptchaRef.current?.executeAsync()
+        recaptchaRef.current?.reset()
+        if (!captchaToken) {
+          stopLoadingError("Captcha error, please try again in a few minutes.")
+          // closeModal()
+          return
+        }
+        data.captchaToken = captchaToken
+        let response = await axios.post(
+          `${Config.application.backendUrl}/verify`,
+          data
         )
-      } else {
-        stopLoadingError("Backend error")
+        console.log("YYPYPYP", response.data, response.status)
+
+        if (response.data.challenge) {
+          challenge = response.data.challenge
+          const { difficulty }: any = response.data
+          const powSolution: any = await solvePow(challenge, difficulty)
+          data.solution = powSolution.solution
+          data.nonce = powSolution.nonce
+
+          console.log("NEW:", { challenge, difficulty })
+          continue
+        }
+
+        challenge = null
+        if (response.status === 200) {
+          const responseData: BackendResponse = response.data
+          const viewerUrl = `${network.viewer}/${responseData.txHash}`
+          stopLoadingSuccess(
+            `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
+          )
+        } else {
+          stopLoadingError("Backend error")
+        }
       }
     } catch (error: any) {
       if (
@@ -167,7 +191,6 @@ export default function FaucetRequestButton({
         ref={recaptchaRef}
         size="invisible"
         sitekey={Config.application.googleCaptchaSiteKey}
-        // onExpired={() => console.log("DFDSFDSFS")}
       />
 
       <Button
