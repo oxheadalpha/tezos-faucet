@@ -1,60 +1,79 @@
-import { Dispatch, SetStateAction } from "react";
-import { TezosToolkit } from "@taquito/taquito";
-import { BeaconWallet } from "@taquito/beacon-wallet";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { Dispatch, SetStateAction } from "react"
+import { TezosToolkit } from "@taquito/taquito"
+import { BeaconWallet } from "@taquito/beacon-wallet"
+import { NetworkType } from "@airgap/beacon-sdk"
 
 type ApplicationConfig = {
-    name: string;
-    googleCaptchaSiteKey: string;
-    isBeaconWallet?: boolean;
-    backendUrl: string;
-    githubRepo: string;
-    profiles: Profiles;
+  name: string
+  googleCaptchaSiteKey: string
+  isBeaconWallet?: boolean
+  backendUrl: string
+  githubRepo: string
+  profiles: Profiles
 }
 
 type Profiles = {
-    user: BackendProfile;
-    baker: BackendProfile;
+  user: BackendProfile
+  baker: BackendProfile
 }
 
 type ConfigType = {
-    application: ApplicationConfig;
-    network: Network;
+  application: ApplicationConfig
+  network: Network
 }
 
 // Must match Config.tsx "network" item
 type Network = {
-    name: string;
-    rpcUrl: string;
-    faucetAddress: string;
-    viewer: string;
-    networkType?: NetworkType | undefined;
+  name: string
+  rpcUrl: string
+  faucetAddress: string
+  viewer: string
+  networkType?: NetworkType
 }
 
 type UserContext = {
-    userAddress: string;
-    setUserAddress: Dispatch<SetStateAction<string>>;
-    userBalance: number;
-    setUserBalance: Dispatch<SetStateAction<number>>;
-};
+  userAddress: string
+  setUserAddress: Dispatch<SetStateAction<string>>
+  userBalance: number
+  setUserBalance: Dispatch<SetStateAction<number>>
+}
 
 type TestnetContext = {
-    network: Network;
-    wallet: BeaconWallet;
-    setWallet: Dispatch<SetStateAction<any>>;
-    Tezos: TezosToolkit;
-    setTezos: Dispatch<SetStateAction<any>>;
+  network: Network
+  wallet: BeaconWallet
+  setWallet: Dispatch<SetStateAction<any>>
+  Tezos: TezosToolkit
+  setTezos: Dispatch<SetStateAction<any>>
 }
 
 type BackendResponse = {
-    status: string;
-    message?: string;
-    txHash?: string;
+  status: string
+  message?: string
+  txHash?: string
 }
 
 type BackendProfile = {
-    profile: string;
-    amount: number;
+  profile: string
+  amount: number
 }
 
-export type { ConfigType, Network, UserContext, TestnetContext, BackendResponse, BackendProfile };
+type StatusContext = {
+  isLoading: boolean
+  setLoading: Dispatch<SetStateAction<boolean>>
+  status: string
+  setStatus: Dispatch<SetStateAction<string>>
+  statusType: string
+  setStatusType: Dispatch<SetStateAction<string>>
+  powWorker: Worker | null
+  setPowWorker: Dispatch<SetStateAction<Worker | null>>
+}
+
+export type {
+  ConfigType,
+  Network,
+  UserContext,
+  StatusContext,
+  TestnetContext,
+  BackendResponse,
+  BackendProfile,
+}

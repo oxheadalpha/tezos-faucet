@@ -10,6 +10,7 @@ declare var Buffer: typeof BufferPolyfill
 globalThis.Buffer = BufferPolyfill
 import { terminal } from "virtual:terminal"
 declare var Buffer: typeof BufferPolyfill
+// @ts-ignore
 globalThis.console = terminal
 
 const root = ReactDOM.createRoot(

@@ -4,18 +4,7 @@ import { Alert, Card, Col, Row, Button } from "react-bootstrap"
 import Parser from "html-react-parser"
 import FaucetToWalletRequest from "./FaucetToWalletRequest"
 import FaucetToInputRequest from "./FaucetToInputRequest"
-import { Network, UserContext } from "../../lib/Types"
-
-export type StatusContext = {
-  isLoading: boolean
-  setLoading: Dispatch<SetStateAction<boolean>>
-  status: string
-  setStatus: Dispatch<SetStateAction<string>>
-  statusType: string
-  setStatusType: Dispatch<SetStateAction<string>>
-  powWorker: Worker | null
-  setPowWorker: Dispatch<SetStateAction<Worker | null>>
-}
+import { Network, UserContext, StatusContext } from "../../lib/Types"
 
 export default function SplittedFaucet({
   network,

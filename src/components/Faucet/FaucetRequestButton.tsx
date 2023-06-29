@@ -1,4 +1,4 @@
-import React, { useRef, RefObject, useState, useEffect } from "react"
+import { useRef, RefObject, useState, useEffect } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
@@ -6,8 +6,7 @@ import axios from "axios"
 
 import Config from "../../Config"
 import { minifyTezosAddress } from "../../lib/Utils"
-import { BackendResponse, Network } from "../../lib/Types"
-import { StatusContext } from "./SplittedFaucet"
+import { BackendResponse, Network, StatusContext } from "../../lib/Types"
 
 export default function FaucetRequestButton({
   address,
