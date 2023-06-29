@@ -52,6 +52,16 @@ export default function FaucetRequestButton({
     !status.isLoading && setLocalLoading(false)
   }, [status.isLoading])
 
+  const execCaptcha = async () => {
+    const captchaToken: any = await recaptchaRef.current?.executeAsync()
+    recaptchaRef.current?.reset()
+    if (!captchaToken) {
+      stopLoadingError("Captcha error, please try again in a few minutes.")
+      return
+    }
+    return captchaToken
+  }
+
   const solvePow = async (challenge: string, difficulty: number) => {
     status.setStatusType("info")
     status.setStatus("Solving PoW challenge...")
@@ -80,33 +90,45 @@ export default function FaucetRequestButton({
     return powSolution
   }
 
-  const getChallenge = async () => {
-    const captchaToken: any = await recaptchaRef.current?.executeAsync()
+  const getTez = async () => {
+    try {
+      let { challenge, difficulty } = await getChallenge()
+      while (challenge && difficulty) {
+        console.log({ challenge, difficulty })
+        const powSolution: any = await solvePow(challenge, difficulty)
+        const response = await verifySolution({ challenge, ...powSolution })
+        console.log({response});
 
-    recaptchaRef.current?.reset()
-    if (!captchaToken) {
-      stopLoadingError("Captcha error, please try again in a few minutes.")
-      return
+        challenge = response.challenge
+        difficulty = response.difficulty
+      }
+    } catch (err) {
+      console.log(err)
     }
+  }
+
+  const getChallenge = async (): Promise<{
+    challenge?: string
+    difficulty?: number
+  }> => {
+    const captchaToken = await execCaptcha()
 
     startLoading()
 
+    const data: any = {
+      address,
+      captchaToken,
+      profile,
+    }
+
     try {
-      const data: any = {
-        address,
-        captchaToken,
-        profile,
-      }
       const response = await axios.post(
         `${Config.application.backendUrl}/challenge`,
         data
       )
 
       if (response.status === 200) {
-        const { challenge, difficulty }: any = response.data
-        console.log({ challenge, difficulty })
-        const powSolution: any = await solvePow(challenge, difficulty)
-        return verifySolution({ challenge, ...powSolution })
+        return response.data
       } else {
         stopLoadingError("Backend error")
       }
@@ -114,75 +136,58 @@ export default function FaucetRequestButton({
       console.log(err)
       stopLoadingError("Forbidden")
     }
+    return {}
   }
 
-  const verifySolution = async ({ challenge, nonce, solution }: any) => {
-    // const captchaToken = await recaptchaRef.current?.executeAsync()
-    // recaptchaRef.current?.reset()
-    // if (!captchaToken) {
-    //   stopLoadingError("Captcha error, please try again in a few minutes.")
-    //   // closeModal()
-    //   return
-    // }
-
-    let data: any = {
+  const verifySolution = async ({
+    nonce,
+    solution,
+  }: {
+    nonce: number
+    solution: string
+  }): Promise<{ challenge?: string; difficulty?: number }> => {
+    const captchaToken = await execCaptcha()
+    const data: any = {
       address,
-      // captchaToken,
+      captchaToken,
       profile,
       nonce,
       solution,
     }
 
     try {
-      while (challenge) {
-        const captchaToken = await recaptchaRef.current?.executeAsync()
-        recaptchaRef.current?.reset()
-        if (!captchaToken) {
-          stopLoadingError("Captcha error, please try again in a few minutes.")
-          // closeModal()
-          return
+      let response = await axios.post(
+        `${Config.application.backendUrl}/verify`,
+        data
+      )
+
+      const responseData = response.data
+      // const responseData: BackendResponse = response.data
+      if (response.status === 200) {
+        if (responseData.challenge && responseData.difficulty) {
+          return responseData
         }
-        data.captchaToken = captchaToken
-        let response = await axios.post(
-          `${Config.application.backendUrl}/verify`,
-          data
+
+        const viewerUrl = `${network.viewer}/${responseData.txHash}`
+        stopLoadingSuccess(
+          `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
-        console.log("YYPYPYP", response.data, response.status)
-
-        if (response.data.challenge) {
-          challenge = response.data.challenge
-          const { difficulty }: any = response.data
-          const powSolution: any = await solvePow(challenge, difficulty)
-          data.solution = powSolution.solution
-          data.nonce = powSolution.nonce
-
-          console.log("NEW:", { challenge, difficulty })
-          continue
-        }
-
-        challenge = null
-        if (response.status === 200) {
-          const responseData: BackendResponse = response.data
-          const viewerUrl = `${network.viewer}/${responseData.txHash}`
-          stopLoadingSuccess(
-            `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
-          )
-        } else {
-          stopLoadingError("Backend error")
-        }
+      } else {
+        stopLoadingError("Backend error")
       }
-    } catch (error: any) {
+    } catch (err: any) {
       if (
-        error.response &&
-        (error.response.status === 500 || error.response.status === 400)
+        err.response &&
+        (err.response.status === 500 || err.response.status === 400)
       ) {
-        const responseData: BackendResponse = error.response.data
+        const responseData: BackendResponse = err.response.data
         stopLoadingError(responseData?.message || "")
       } else {
-        console.log(error)
+        console.log(err)
         stopLoadingError("Backend error")
       }
     }
+    return {}
   }
 
   return (
@@ -196,7 +201,7 @@ export default function FaucetRequestButton({
       <Button
         variant="primary"
         disabled={status.isLoading || !address}
-        onClick={getChallenge}
+        onClick={getTez}
       >
         <DropletFill />
         &nbsp;
