@@ -41,6 +41,9 @@ export default function FaucetToInputRequest({
           className={inputClass}
           disabled={status.isLoading}
         />
+        <Form.Control.Feedback type="invalid">
+          Invalid address
+        </Form.Control.Feedback>
       </Form.Group>
       <Row>
         <Col>
