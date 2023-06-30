@@ -1,12 +1,17 @@
-import React, { useRef, RefObject, useState, useEffect } from "react"
+import axios from "axios"
+import React, { RefObject, useEffect, useRef, useState } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
-import axios from "axios"
 
 import Config from "../../Config"
+import {
+  ChallengeResponse,
+  Network,
+  StatusContext,
+  VerifyResponse,
+} from "../../lib/Types"
 import { minifyTezosAddress } from "../../lib/Utils"
-import { BackendResponse, Network, StatusContext } from "../../lib/Types"
 
 export default function FaucetRequestButton({
   address,
@@ -103,6 +108,7 @@ export default function FaucetRequestButton({
       }
     } catch (err) {
       console.log(err)
+      stopLoadingError("Error getting Tez")
     }
   }
 
@@ -121,15 +127,15 @@ export default function FaucetRequestButton({
         profile,
       }
 
-      const { data, status } = await axios.post(
+      const { data }: { data: ChallengeResponse } = await axios.post(
         `${Config.application.backendUrl}/challenge`,
         input
       )
 
-      if (status === 200) {
+      if (data.challenge && data.difficulty) {
         return data
       } else {
-        stopLoadingError(data.message)
+        stopLoadingError(data?.message || "Error getting challenge")
       }
     } catch (err: any) {
       stopLoadingError(err?.response?.data.message || "Error getting challenge")
@@ -154,24 +160,22 @@ export default function FaucetRequestButton({
     }
 
     try {
-      const { data, status } = await axios.post(
+      const { data }: { data: VerifyResponse } = await axios.post(
         `${Config.application.backendUrl}/verify`,
         input
       )
-      // const responseData: BackendResponse = response.data
-      if (status === 200) {
-        // If there is another challenge
-        if (data.challenge && data.difficulty) {
-          return data
-        }
 
+      // If there is another challenge
+      if (data.challenge && data.difficulty) {
+        return data
+      } else if (data.txHash) {
         // All challenges were solved
         const viewerUrl = `${network.viewer}/${data.txHash}`
         stopLoadingSuccess(
           `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
       } else {
-        stopLoadingError(data.message)
+        stopLoadingError(data?.message || "Error verifying solution")
       }
     } catch (err: any) {
       stopLoadingError(

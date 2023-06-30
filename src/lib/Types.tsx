@@ -12,6 +12,11 @@ type ApplicationConfig = {
   profiles: Profiles
 }
 
+type BackendProfile = {
+  profile: string
+  amount: number
+}
+
 type Profiles = {
   user: BackendProfile
   baker: BackendProfile
@@ -46,15 +51,19 @@ type TestnetContext = {
   setTezos: Dispatch<SetStateAction<any>>
 }
 
-type BackendResponse = {
-  status: string
+type ChallengeResponse = {
+  status?: string
   message?: string
-  txHash?: string
+  challenge?: string
+  difficulty?: number
 }
 
-type BackendProfile = {
-  profile: string
-  amount: number
+type VerifyResponse = {
+  status?: string
+  message?: string
+  challenge?: string
+  difficulty?: number
+  txHash?: string
 }
 
 type StatusContext = {
@@ -74,6 +83,7 @@ export type {
   UserContext,
   StatusContext,
   TestnetContext,
-  BackendResponse,
+  ChallengeResponse,
+  VerifyResponse,
   BackendProfile,
 }
