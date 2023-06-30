@@ -1,4 +1,4 @@
-import { useRef, RefObject, useState, useEffect } from "react"
+import React, { useRef, RefObject, useState, useEffect } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
@@ -96,7 +96,7 @@ export default function FaucetRequestButton({
         console.log({ challenge, difficulty })
         const powSolution: any = await solvePow(challenge, difficulty)
         const response = await verifySolution({ challenge, ...powSolution })
-        console.log({response});
+        console.log({ response })
 
         challenge = response.challenge
         difficulty = response.difficulty
@@ -114,26 +114,25 @@ export default function FaucetRequestButton({
 
     startLoading()
 
-    const data: any = {
-      address,
-      captchaToken,
-      profile,
-    }
-
     try {
-      const response = await axios.post(
+      const input = {
+        address,
+        captchaToken,
+        profile,
+      }
+
+      const { data, status } = await axios.post(
         `${Config.application.backendUrl}/challenge`,
-        data
+        input
       )
 
-      if (response.status === 200) {
-        return response.data
+      if (status === 200) {
+        return data
       } else {
-        stopLoadingError("Backend error")
+        stopLoadingError(data.message)
       }
-    } catch (err) {
-      console.log(err)
-      stopLoadingError("Forbidden")
+    } catch (err: any) {
+      stopLoadingError(err?.response?.data.message || "Error getting challenge")
     }
     return {}
   }
@@ -146,7 +145,7 @@ export default function FaucetRequestButton({
     solution: string
   }): Promise<{ challenge?: string; difficulty?: number }> => {
     const captchaToken = await execCaptcha()
-    const data: any = {
+    const input = {
       address,
       captchaToken,
       profile,
@@ -155,36 +154,29 @@ export default function FaucetRequestButton({
     }
 
     try {
-      let response = await axios.post(
+      const { data, status } = await axios.post(
         `${Config.application.backendUrl}/verify`,
-        data
+        input
       )
-
-      const responseData = response.data
       // const responseData: BackendResponse = response.data
-      if (response.status === 200) {
-        if (responseData.challenge && responseData.difficulty) {
-          return responseData
+      if (status === 200) {
+        // If there is another challenge
+        if (data.challenge && data.difficulty) {
+          return data
         }
 
-        const viewerUrl = `${network.viewer}/${responseData.txHash}`
+        // All challenges were solved
+        const viewerUrl = `${network.viewer}/${data.txHash}`
         stopLoadingSuccess(
           `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
       } else {
-        stopLoadingError("Backend error")
+        stopLoadingError(data.message)
       }
     } catch (err: any) {
-      if (
-        err.response &&
-        (err.response.status === 500 || err.response.status === 400)
-      ) {
-        const responseData: BackendResponse = err.response.data
-        stopLoadingError(responseData?.message || "")
-      } else {
-        console.log(err)
-        stopLoadingError("Backend error")
-      }
+      stopLoadingError(
+        err?.response?.data.message || "Error verifying solution"
+      )
     }
     return {}
   }

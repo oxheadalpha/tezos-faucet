@@ -1,7 +1,7 @@
 import { ChangeEvent, useState } from "react"
 import { Col, Form, Row } from "react-bootstrap"
 import Config from "../../Config"
-import { isValidTezosAddress } from "../../lib/Utils"
+import { validateKeyHash } from "@taquito/utils"
 import { Network, StatusContext } from "../../lib/Types"
 import FaucetRequestButton from "./FaucetRequestButton"
 
@@ -20,7 +20,7 @@ export default function FaucetToInputRequest({
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     const value: string = event.target.value
 
-    if (isValidTezosAddress(value) || value.length === 0) {
+    if (validateKeyHash(value) === 3 || value.length === 0) {
       setInputToAddr(value)
 
       if (value.length > 0) setInputClass("is-valid")
