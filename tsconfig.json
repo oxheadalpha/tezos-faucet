@@ -24,7 +24,6 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src",
-    "public/powWorker.js"
+    "src"
   ]
 }
