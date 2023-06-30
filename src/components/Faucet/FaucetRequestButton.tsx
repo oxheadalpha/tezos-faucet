@@ -3,6 +3,7 @@ import React, { RefObject, useEffect, useRef, useState } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
+import PowWorker from "../../powWorker?worker"
 
 import Config from "../../Config"
 import {
@@ -72,21 +73,15 @@ export default function FaucetRequestButton({
 
     // There shouldn't be another worker running
     if (status.powWorker) status.powWorker.terminate()
-    const powWorker = new Worker("powWorker.js")
+
+    const powWorker = new PowWorker()
     status.setPowWorker(powWorker)
-
     powWorker.postMessage({ challenge, difficulty })
-    const powSolution = await new Promise((resolve, reject) => {
-      powWorker.addEventListener("message", (event) => resolve(event.data))
-      powWorker.addEventListener("error", () => {
-        reject("Worker has been terminated")
-        console.log("DSFSDFSDF")
-      })
-    })
-
-    powWorker.onerror = (event) => {
-      console.log("ON ERROR", event)
-    }
+    const powSolution = await new Promise((resolve, reject) =>
+      powWorker.addEventListener("message", ({ data }) =>
+        data.message ? reject(data) : resolve(data)
+      )
+    )
 
     powWorker.terminate()
     status.setPowWorker(null)
@@ -106,9 +101,8 @@ export default function FaucetRequestButton({
         challenge = response.challenge
         difficulty = response.difficulty
       }
-    } catch (err) {
-      console.log(err)
-      stopLoadingError("Error getting Tez")
+    } catch (err: any) {
+      stopLoadingError(err.message || "Error getting Tez")
     }
   }
 
@@ -175,7 +169,7 @@ export default function FaucetRequestButton({
           `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
       } else {
-        stopLoadingError(data?.message || "Error verifying solution")
+        stopLoadingError("Error verifying solution")
       }
     } catch (err: any) {
       stopLoadingError(
