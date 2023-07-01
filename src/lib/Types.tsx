@@ -3,6 +3,15 @@ import { TezosToolkit } from "@taquito/taquito"
 import { BeaconWallet } from "@taquito/beacon-wallet"
 import { NetworkType } from "@airgap/beacon-sdk"
 
+type BackendProfile = {
+  profile: string
+  amount: number
+}
+type Profiles = {
+  user: BackendProfile
+  baker: BackendProfile
+}
+
 type ApplicationConfig = {
   name: string
   googleCaptchaSiteKey: string
@@ -12,23 +21,30 @@ type ApplicationConfig = {
   profiles: Profiles
 }
 
-type BackendProfile = {
-  profile: string
-  amount: number
-}
-
-type Profiles = {
-  user: BackendProfile
-  baker: BackendProfile
-}
-
-type ConfigType = {
+export type ConfigType = {
   application: ApplicationConfig
   network: Network
 }
 
+export type Challenge = {
+  challenge: string
+  difficulty: number
+  counter: number
+}
+
+export type ChallengeResponse = Partial<Challenge> & {
+  status?: string
+  message?: string
+}
+
+export type VerifyResponse = Partial<Challenge> & {
+  status?: string
+  message?: string
+  txHash?: string
+}
+
 // Must match Config.tsx "network" item
-type Network = {
+export type Network = {
   name: string
   rpcUrl: string
   faucetAddress: string
@@ -36,14 +52,14 @@ type Network = {
   networkType?: NetworkType
 }
 
-type UserContext = {
+export type UserContext = {
   userAddress: string
   setUserAddress: Dispatch<SetStateAction<string>>
   userBalance: number
   setUserBalance: Dispatch<SetStateAction<number>>
 }
 
-type TestnetContext = {
+export type TestnetContext = {
   network: Network
   wallet: BeaconWallet
   setWallet: Dispatch<SetStateAction<any>>
@@ -51,22 +67,7 @@ type TestnetContext = {
   setTezos: Dispatch<SetStateAction<any>>
 }
 
-type ChallengeResponse = {
-  status?: string
-  message?: string
-  challenge?: string
-  difficulty?: number
-}
-
-type VerifyResponse = {
-  status?: string
-  message?: string
-  challenge?: string
-  difficulty?: number
-  txHash?: string
-}
-
-type StatusContext = {
+export type StatusContext = {
   isLoading: boolean
   setLoading: Dispatch<SetStateAction<boolean>>
   status: string
@@ -75,15 +76,4 @@ type StatusContext = {
   setStatusType: Dispatch<SetStateAction<string>>
   powWorker: Worker | null
   setPowWorker: Dispatch<SetStateAction<Worker | null>>
-}
-
-export type {
-  ConfigType,
-  Network,
-  UserContext,
-  StatusContext,
-  TestnetContext,
-  ChallengeResponse,
-  VerifyResponse,
-  BackendProfile,
 }

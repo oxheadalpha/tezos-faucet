@@ -7,6 +7,7 @@ import PowWorker from "../../powWorker?worker"
 
 import Config from "../../Config"
 import {
+  Challenge,
   ChallengeResponse,
   Network,
   StatusContext,
@@ -67,9 +68,13 @@ export default function FaucetRequestButton({
     return captchaToken
   }
 
-  const solvePow = async (challenge: string, difficulty: number) => {
+  const solvePow = async (
+    challenge: string,
+    difficulty: number,
+    counter: number
+  ) => {
     status.setStatusType("info")
-    status.setStatus("Solving PoW challenge...")
+    status.setStatus(`Solving PoW challenge #${counter}...`)
 
     // There shouldn't be another worker running
     if (status.powWorker) status.powWorker.terminate()
@@ -77,10 +82,12 @@ export default function FaucetRequestButton({
     const powWorker = new PowWorker()
     status.setPowWorker(powWorker)
     powWorker.postMessage({ challenge, difficulty })
-    const powSolution = await new Promise((resolve, reject) =>
-      powWorker.addEventListener("message", ({ data }) =>
-        data.message ? reject(data) : resolve(data)
-      )
+
+    const powSolution: { solution: string; nonce: number } = await new Promise(
+      (resolve, reject) =>
+        powWorker.addEventListener("message", ({ data }) =>
+          data.message ? reject(data) : resolve(data)
+        )
     )
 
     powWorker.terminate()
@@ -91,25 +98,23 @@ export default function FaucetRequestButton({
 
   const getTez = async () => {
     try {
-      let { challenge, difficulty } = await getChallenge()
-      while (challenge && difficulty) {
-        console.log({ challenge, difficulty })
-        const powSolution: any = await solvePow(challenge, difficulty)
-        const response = await verifySolution({ challenge, ...powSolution })
+      let { challenge, difficulty, counter } = await getChallenge()
+      while (challenge && difficulty && counter) {
+        console.log({ challenge, difficulty, counter })
+        const powSolution = await solvePow(challenge, difficulty, counter)
+        const response = await verifySolution(powSolution)
         console.log({ response })
 
         challenge = response.challenge
         difficulty = response.difficulty
+        counter = response.counter
       }
     } catch (err: any) {
       stopLoadingError(err.message || "Error getting Tez")
     }
   }
 
-  const getChallenge = async (): Promise<{
-    challenge?: string
-    difficulty?: number
-  }> => {
+  const getChallenge = async (): Promise<Partial<Challenge>> => {
     const captchaToken = await execCaptcha()
 
     startLoading()
@@ -126,7 +131,7 @@ export default function FaucetRequestButton({
         input
       )
 
-      if (data.challenge && data.difficulty) {
+      if (data.challenge && data.difficulty && data.counter) {
         return data
       } else {
         stopLoadingError(data?.message || "Error getting challenge")
@@ -138,12 +143,12 @@ export default function FaucetRequestButton({
   }
 
   const verifySolution = async ({
-    nonce,
     solution,
+    nonce,
   }: {
-    nonce: number
     solution: string
-  }): Promise<{ challenge?: string; difficulty?: number }> => {
+    nonce: number
+  }): Promise<Partial<Challenge>> => {
     const captchaToken = await execCaptcha()
     const input = {
       address,
@@ -160,7 +165,7 @@ export default function FaucetRequestButton({
       )
 
       // If there is another challenge
-      if (data.challenge && data.difficulty) {
+      if (data.challenge && data.difficulty && data.counter) {
         return data
       } else if (data.txHash) {
         // All challenges were solved
