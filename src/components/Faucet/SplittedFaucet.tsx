@@ -1,6 +1,6 @@
-import React, { useState, useEffect, SetStateAction, Dispatch } from "react"
+import React, { useState, useEffect} from "react"
 import { TezosToolkit } from "@taquito/taquito"
-import { Alert, Card, Col, Row, Button } from "react-bootstrap"
+import { Alert, Card, Col, Row, Button, Spinner } from "react-bootstrap"
 import Parser from "html-react-parser"
 import FaucetToWalletRequest from "./FaucetToWalletRequest"
 import FaucetToInputRequest from "./FaucetToInputRequest"
@@ -85,21 +85,26 @@ export default function SplittedFaucet({
                 dismissible={!isLoading}
               >
                 <div className="d-flex justify-content-between align-items-center">
-                  {Parser(status)}
+                  <div className="d-inline-block">
+                    {Parser(status)}
+                    {isLoading && <Spinner size="sm" className="ms-1" />}
+                  </div>
                   {isLoading && (
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        if (powWorker) {
-                          powWorker.terminate()
-                          setPowWorker(null)
-                          setLoading(false)
-                          setShowAlert(false)
-                        }
-                      }}
-                    >
-                      Cancel
-                    </Button>
+                    <div>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          if (powWorker) {
+                            powWorker.terminate()
+                            setPowWorker(null)
+                            setLoading(false)
+                            setShowAlert(false)
+                          }
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   )}
                 </div>
               </Alert>
