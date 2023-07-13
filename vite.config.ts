@@ -7,7 +7,11 @@ export default defineConfig({
   build: {
     outDir: "build",
     sourcemap: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
+  define: { global: "globalThis" },
   plugins: [react(), Terminal()],
   resolve: {
     alias: {
@@ -18,14 +22,6 @@ export default defineConfig({
       zlib: "rollup-plugin-node-polyfills/polyfills/zlib",
       process: "rollup-plugin-node-polyfills/polyfills/process-es6",
       buffer: "rollup-plugin-node-polyfills/polyfills/buffer-es6",
-    },
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      // Node.js global to browser globalThis
-      define: {
-        global: "globalThis",
-      },
     },
   },
 })

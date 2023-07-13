@@ -8,8 +8,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Buffer as BufferPolyfill } from "buffer"
 declare var Buffer: typeof BufferPolyfill
 globalThis.Buffer = BufferPolyfill
-import { terminal } from "virtual:terminal"
 declare var Buffer: typeof BufferPolyfill
+
+import { terminal } from "virtual:terminal"
 // @ts-ignore
 globalThis.console = terminal
 

@@ -14,7 +14,7 @@ self.addEventListener("message", async ({ data }) => {
     let nonce = 0
     let solution = ""
 
-    console.time("START")
+    import.meta.env.DEV && console.time("POW")
     while (true) {
       const input = `${challenge}:${nonce}`
       const hash = await sha256(input)
@@ -25,7 +25,7 @@ self.addEventListener("message", async ({ data }) => {
       }
       nonce++
     }
-    console.timeEnd("START")
+    import.meta.env.DEV && console.timeEnd("POW")
 
     console.log({ solution, nonce })
   } catch (err: any) {
