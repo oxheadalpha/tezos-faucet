@@ -1,7 +1,15 @@
+"use strict"
 const crypto = require("crypto")
 
+/*
+We use console.error for logging so that logs are not written to stdout when the
+script is run from the CLI. We want the transaction hash to be the only output
+once the Tez is sent to the user.
+*/
+const { error: log } = require("console")
+
 const displayHelp = () => {
-  console.log(`Usage: getTez.js [options] <address>
+  log(`Usage: getTez.js [options] <address>
 Options:
   -h, --help             Display help information.
   -p, --profile <value>  Set the profile ('user' for 1 Tez or 'baker' for 6000 Tez).
@@ -10,24 +18,42 @@ Options:
   -f, --faucet-url <value> Set the custom faucet URL. Ignores --network.`)
 }
 
-const helpAndExit = (exitCode) => {
-  displayHelp()
-  process.exit(exitCode)
+const isMainModule = require.main === module
+
+const DISPLAY_HELP = true
+const handleError = (message, help) => {
+  if (isMainModule) {
+    log(message)
+    help && displayHelp()
+    process.exit(1)
+  } else {
+    help && displayHelp()
+    throw new Error(message)
+  }
 }
 
-const args = process.argv.slice(2)
 let address = ""
 let profile = ""
 let network = ""
 let faucetUrl = ""
 
-const parseArgs = async () => {
+const parseArgs = async (args) => {
+  // If the file is executed directly by node and not via import then argv will
+  // include the file name.
+  args = args || process.argv.slice(isMainModule ? 2 : 1)
+  if (typeof args === "string") args = args.split(" ")
+
   while (args.length > 0) {
     const arg = args.shift()
     switch (arg) {
       case "-h":
       case "--help":
-        helpAndExit(0)
+        if (isMainModule) {
+          displayHelp()
+          process.exit(0)
+        } else {
+          throw new Error("'--help' passed")
+        }
       case "-p":
       case "--profile":
         profile = args.shift().toLowerCase()
@@ -47,21 +73,17 @@ const parseArgs = async () => {
   }
 
   if (!address) {
-    console.error("Tezos address is required.")
-    helpAndExit(1)
+    handleError("Tezos address is required.", DISPLAY_HELP)
   }
 
   if (!profile) {
-    console.error("Profile is required.")
-    helpAndExit(1)
+    handleError("Profile is required.", DISPLAY_HELP)
   } else if (!["user", "baker"].includes(profile)) {
-    console.error("Invalid profile. Allowed values are 'user' or 'baker'.")
-    process.exit(1)
+    handleError("Invalid profile. Allowed values are 'user' or 'baker'.")
   }
 
   if (!faucetUrl && !network) {
-    console.error("Either a network or faucet URL is required.")
-    helpAndExit(1)
+    handleError("Either a network or faucet URL is required.", DISPLAY_HELP)
   }
 
   if (!faucetUrl) {
@@ -69,8 +91,7 @@ const parseArgs = async () => {
     const response = await fetch(teztnetsUrl)
 
     if (!response.ok) {
-      console.error(`Error fetching networks from ${teztnetsUrl}`)
-      process.exit(1)
+      handleError(`Error fetching networks from ${teztnetsUrl}`)
     }
 
     for (const net of Object.values(await response.json())) {
@@ -80,8 +101,7 @@ const parseArgs = async () => {
     }
 
     if (!faucetUrl) {
-      console.error("Network not found or not supported.")
-      process.exit(1)
+      handleError("Network not found or not supported.")
     }
   }
 }
@@ -94,7 +114,7 @@ const requestHeaders = {
 }
 
 const getChallenge = async () => {
-  console.log("Requesting PoW challenge...")
+  log("Requesting PoW challenge...")
 
   const response = await fetch(`${faucetUrl}/challenge`, {
     method: "POST",
@@ -105,22 +125,21 @@ const getChallenge = async () => {
   const body = await response.json()
 
   if (!response.ok) {
-    console.error(`ERROR: ${body.message}`)
-    process.exit(1)
+    handleError(`ERROR: ${body.message}`)
   }
 
   return body
 }
 
 const solvePow = (challenge, difficulty, counter) => {
-  console.log(`\nSolving challenge #${counter}...`)
+  log(`\nSolving challenge #${counter}...`)
 
   let nonce = 0
   while (true) {
     const input = `${challenge}:${nonce}`
     const hash = crypto.createHash("sha256").update(input).digest("hex")
     if (hash.startsWith("0".repeat(difficulty) + "8")) {
-      console.log(`Solution found`)
+      log(`Solution found`)
       return { solution: hash, nonce }
     }
     nonce++
@@ -128,7 +147,7 @@ const solvePow = (challenge, difficulty, counter) => {
 }
 
 const verifySolution = async (solution, nonce) => {
-  console.log("Verifying solution...")
+  log("Verifying solution...")
 
   const response = await fetch(`${faucetUrl}/verify`, {
     method: "POST",
@@ -140,35 +159,42 @@ const verifySolution = async (solution, nonce) => {
     await response.json()
 
   if (!response.ok) {
-    console.error(`ERROR: ${message}`)
-    process.exit(1)
+    handleError(`ERROR: ${message}`)
   }
 
   if (txHash) {
-    console.log(`Tez sent! Check transaction: ${txHash}`)
-    return {}
+    log(`Solution is valid`)
+    log(`Tez sent! Check transaction: ${txHash}`)
+    return { txHash }
   } else if (challenge && difficulty && counter) {
-    console.log(`Solution is valid`)
+    log(`Solution is valid`)
     return { challenge, difficulty, counter }
   } else {
-    console.error(`Error verifying solution: ${message}`)
-    process.exit(1)
+    handleError(`Error verifying solution: ${message}`)
   }
 }
 
-;(async () => {
-  await parseArgs()
+const getTez = async (args) => {
+  await parseArgs(args)
 
   let { challenge, difficulty, counter } = await getChallenge()
 
   while (challenge && difficulty && counter) {
     const { solution, nonce } = solvePow(challenge, difficulty, counter)
 
-    ;({ challenge, difficulty, counter } = await verifySolution(
+    let txHash
+    ;({ challenge, difficulty, counter, txHash } = await verifySolution(
       solution,
       nonce
     ))
 
-    console.log({ challenge, difficulty, nonce, counter })
+    // log({ challenge, difficulty, nonce, counter })
+    if (txHash) return txHash
   }
-})()
+}
+
+if (isMainModule) {
+  return getTez().then((txHash) => process.stdout.write(txHash))
+}
+
+module.exports = getTez
