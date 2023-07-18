@@ -101,7 +101,11 @@ export default function FaucetRequestButton({
       let { challenge, difficulty, challengeCounter } = await getChallenge()
       while (challenge && difficulty && challengeCounter) {
         console.log({ challenge, difficulty, challengeCounter })
-        const powSolution = await solvePow(challenge, difficulty, challengeCounter)
+        const powSolution = await solvePow(
+          challenge,
+          difficulty,
+          challengeCounter
+        )
         const response = await verifySolution(powSolution)
         console.log({ response })
 
@@ -128,7 +132,8 @@ export default function FaucetRequestButton({
 
       const { data }: { data: ChallengeResponse } = await axios.post(
         `${Config.application.backendUrl}/challenge`,
-        input
+        input,
+        { timeout: 5000 }
       )
 
       if (data.challenge && data.difficulty && data.challengeCounter) {
@@ -161,7 +166,8 @@ export default function FaucetRequestButton({
     try {
       const { data }: { data: VerifyResponse } = await axios.post(
         `${Config.application.backendUrl}/verify`,
-        input
+        input,
+        { timeout: 5000 }
       )
 
       // If there is another challenge
