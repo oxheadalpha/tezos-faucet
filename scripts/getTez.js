@@ -131,8 +131,8 @@ const getChallenge = async () => {
   return body
 }
 
-const solvePow = (challenge, difficulty, counter) => {
-  log(`\nSolving challenge #${counter}...`)
+const solvePow = (challenge, difficulty, challengeCounter) => {
+  log(`\nSolving challenge #${challengeCounter}...`)
 
   let nonce = 0
   while (true) {
@@ -155,7 +155,7 @@ const verifySolution = async (solution, nonce) => {
     body: `address=${address}&profile=${profile}&nonce=${nonce}&solution=${solution}`,
   })
 
-  const { txHash, challenge, counter, difficulty, message } =
+  const { txHash, challenge, challengeCounter, difficulty, message } =
     await response.json()
 
   if (!response.ok) {
@@ -166,9 +166,9 @@ const verifySolution = async (solution, nonce) => {
     log(`Solution is valid`)
     log(`Tez sent! Check transaction: ${txHash}`)
     return { txHash }
-  } else if (challenge && difficulty && counter) {
+  } else if (challenge && difficulty && challengeCounter) {
     log(`Solution is valid`)
-    return { challenge, difficulty, counter }
+    return { challenge, difficulty, challengeCounter }
   } else {
     handleError(`Error verifying solution: ${message}`)
   }
@@ -177,18 +177,18 @@ const verifySolution = async (solution, nonce) => {
 const getTez = async (args) => {
   await parseArgs(args)
 
-  let { challenge, difficulty, counter } = await getChallenge()
+  let { challenge, difficulty, challengeCounter } = await getChallenge()
 
-  while (challenge && difficulty && counter) {
-    const { solution, nonce } = solvePow(challenge, difficulty, counter)
+  while (challenge && difficulty && challengeCounter) {
+    const { solution, nonce } = solvePow(challenge, difficulty, challengeCounter)
 
     let txHash
-    ;({ challenge, difficulty, counter, txHash } = await verifySolution(
+    ;({ challenge, difficulty, challengeCounter, txHash } = await verifySolution(
       solution,
       nonce
     ))
 
-    // log({ challenge, difficulty, nonce, counter })
+    // log({ challenge, difficulty, nonce, challengeCounter })
     if (txHash) return txHash
   }
 }

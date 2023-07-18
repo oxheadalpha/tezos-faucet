@@ -71,10 +71,10 @@ export default function FaucetRequestButton({
   const solvePow = async (
     challenge: string,
     difficulty: number,
-    counter: number
+    challengeCounter: number
   ) => {
     status.setStatusType("info")
-    status.setStatus(`Solving PoW challenge #${counter}...`)
+    status.setStatus(`Solving PoW challenge #${challengeCounter}...`)
 
     // There shouldn't be another worker running
     if (status.powWorker) status.powWorker.terminate()
@@ -98,16 +98,16 @@ export default function FaucetRequestButton({
 
   const getTez = async () => {
     try {
-      let { challenge, difficulty, counter } = await getChallenge()
-      while (challenge && difficulty && counter) {
-        console.log({ challenge, difficulty, counter })
-        const powSolution = await solvePow(challenge, difficulty, counter)
+      let { challenge, difficulty, challengeCounter } = await getChallenge()
+      while (challenge && difficulty && challengeCounter) {
+        console.log({ challenge, difficulty, challengeCounter })
+        const powSolution = await solvePow(challenge, difficulty, challengeCounter)
         const response = await verifySolution(powSolution)
         console.log({ response })
 
         challenge = response.challenge
         difficulty = response.difficulty
-        counter = response.counter
+        challengeCounter = response.challengeCounter
       }
     } catch (err: any) {
       stopLoadingError(err.message || "Error getting Tez")
@@ -131,7 +131,7 @@ export default function FaucetRequestButton({
         input
       )
 
-      if (data.challenge && data.difficulty && data.counter) {
+      if (data.challenge && data.difficulty && data.challengeCounter) {
         return data
       } else {
         stopLoadingError(data?.message || "Error getting challenge")
@@ -165,7 +165,7 @@ export default function FaucetRequestButton({
       )
 
       // If there is another challenge
-      if (data.challenge && data.difficulty && data.counter) {
+      if (data.challenge && data.difficulty && data.challengeCounter) {
         return data
       } else if (data.txHash) {
         // All challenges were solved

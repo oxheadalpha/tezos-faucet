@@ -29,7 +29,7 @@ export type ConfigType = {
 export type Challenge = {
   challenge: string
   difficulty: number
-  counter: number
+  challengeCounter: number
 }
 
 export type ChallengeResponse = Partial<Challenge> & {
