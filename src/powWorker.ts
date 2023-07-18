@@ -18,16 +18,15 @@ self.addEventListener("message", async ({ data }) => {
     while (true) {
       const input = `${challenge}:${nonce}`
       const hash = await sha256(input)
-      if (hash.startsWith("0".repeat(difficulty) + "8")) {
+      if (hash.startsWith("0".repeat(difficulty))) {
         solution = hash
         self.postMessage({ solution: hash, nonce })
         break
       }
       nonce++
     }
-    import.meta.env.DEV && console.timeEnd("POW")
-
-    console.log({ solution, nonce })
+    import.meta.env.DEV &&
+      (console.timeEnd("POW"), console.log({ solution, nonce }))
   } catch (err: any) {
     self.postMessage({ message: "Error solving PoW challenge" })
     self.close()

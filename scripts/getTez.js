@@ -138,7 +138,7 @@ const solvePow = (challenge, difficulty, counter) => {
   while (true) {
     const input = `${challenge}:${nonce}`
     const hash = crypto.createHash("sha256").update(input).digest("hex")
-    if (hash.startsWith("0".repeat(difficulty) + "8")) {
+    if (hash.startsWith("0".repeat(difficulty))) {
       log(`Solution found`)
       return { solution: hash, nonce }
     }
