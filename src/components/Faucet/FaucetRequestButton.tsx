@@ -154,10 +154,8 @@ export default function FaucetRequestButton({
     solution: string
     nonce: number
   }): Promise<Partial<Challenge>> => {
-    const captchaToken = await execCaptcha()
     const input = {
       address,
-      captchaToken,
       profile,
       nonce,
       solution,
