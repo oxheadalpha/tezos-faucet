@@ -38,7 +38,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "npm run check-config && tsc && vite build",
+    "build": "npm run check-config && tsc --noEmit && vite build",
     "serve": "vite preview",
     "check-config": "node ./scripts/configChecker.js"
   },
