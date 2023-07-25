@@ -5,20 +5,25 @@ import Terminal from "vite-plugin-terminal"
 import pkgJson from "./package.json"
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   build: {
     outDir: "build",
-    sourcemap: true,
+    sourcemap: mode === "development" || "hidden",
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => (id.includes("node_modules") ? "vendor" : null),
+      },
+    },
   },
+  plugins: [react(), Terminal()],
   define: {
     global: "globalThis",
     "import.meta.env.APP_DESCRIPTION": JSON.stringify(pkgJson.description),
     "import.meta.env.APP_VERSION": JSON.stringify(pkgJson.version),
   },
-  plugins: [react(), Terminal()],
   resolve: {
     alias: {
       http: "rollup-plugin-node-polyfills/polyfills/http",
@@ -30,4 +35,4 @@ export default defineConfig({
       buffer: "rollup-plugin-node-polyfills/polyfills/buffer-es6",
     },
   },
-})
+}))
