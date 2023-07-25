@@ -28,6 +28,7 @@ self.addEventListener("message", async ({ data }) => {
     import.meta.env.DEV &&
       (console.timeEnd("POW"), console.log({ solution, nonce }))
   } catch (err: any) {
+    console.error(err)
     self.postMessage({ message: "Error solving PoW challenge" })
     self.close()
   }
