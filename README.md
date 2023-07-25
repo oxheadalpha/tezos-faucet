@@ -7,7 +7,7 @@ One-click faucet for Tezos.
 ### Made with
 
 - React
-- Craco
+- Vite
 - Typescript
 - Taquito
 - Beacon Wallet
@@ -42,7 +42,7 @@ To setup the faucet for a new network:
 
 ### 1. Update Beacon Wallet configuration for new network
 
-Currently supported networks: 
+Currently supported networks:
 
 - Mainnet
 - Mondaynet

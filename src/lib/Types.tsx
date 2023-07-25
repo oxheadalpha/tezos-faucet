@@ -7,6 +7,7 @@ type BackendProfile = {
   profile: string
   amount: number
 }
+
 type Profiles = {
   user: BackendProfile
   baker: BackendProfile
