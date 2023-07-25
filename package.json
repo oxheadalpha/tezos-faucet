@@ -1,7 +1,7 @@
 {
   "name": "tezos-faucet",
   "version": "1.0.0",
-  "description": "Tezos faucet for testnets",
+  "description": "Tezos Faucet for Testnets",
   "private": true,
   "devDependencies": {
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",

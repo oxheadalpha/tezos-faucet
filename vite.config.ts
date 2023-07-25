@@ -2,6 +2,8 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import Terminal from "vite-plugin-terminal"
 
+import pkgJson from "./package.json"
+
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
@@ -11,7 +13,11 @@ export default defineConfig({
       transformMixedEsModules: true,
     },
   },
-  define: { global: "globalThis" },
+  define: {
+    global: "globalThis",
+    "import.meta.env.APP_DESCRIPTION": JSON.stringify(pkgJson.description),
+    "import.meta.env.APP_VERSION": JSON.stringify(pkgJson.version),
+  },
   plugins: [react(), Terminal()],
   resolve: {
     alias: {
