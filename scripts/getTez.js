@@ -194,7 +194,7 @@ const getTez = async (args) => {
 }
 
 if (isMainModule) {
-  return getTez().then((txHash) => process.stdout.write(txHash))
+  return getTez().then((txHash) => txHash && process.stdout.write(txHash))
 }
 
 module.exports = getTez
