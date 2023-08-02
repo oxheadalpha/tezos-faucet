@@ -84,10 +84,12 @@ export default function FaucetRequestButton({
     powWorker.postMessage({ challenge, difficulty })
 
     const powSolution: { solution: string; nonce: number } = await new Promise(
-      (resolve, reject) =>
+      (resolve, reject) => {
         powWorker.addEventListener("message", ({ data }) =>
           data.message ? reject(data) : resolve(data)
         )
+        powWorker.addEventListener("error", reject)
+      }
     )
 
     powWorker.terminate()
