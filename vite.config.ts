@@ -16,9 +16,18 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => (id.includes("node_modules") ? "vendor" : null),
       },
+      external: ["virtual:terminal"],
     },
   },
-  plugins: [react(), Terminal()],
+  plugins: [
+    react(),
+    // In dev, let console.log go to terminal and console output. `console` arg
+    // doesn't work with vite-plugin-terminal plugin. See this issue.
+    // https://github.com/patak-dev/vite-plugin-terminal/issues/23
+    ...[
+      mode === "development" && Terminal({ output: ["terminal", "console"] }),
+    ],
+  ],
   define: {
     global: "globalThis",
     "import.meta.env.APP_DESCRIPTION": JSON.stringify(pkgJson.description),

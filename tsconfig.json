@@ -8,6 +8,7 @@
     ],
     "types": [
       "vite/client",
+      "vite-plugin-terminal/client"
     ],
     "allowJs": true,
     "skipLibCheck": true,
