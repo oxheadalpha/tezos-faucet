@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react"
+import { useState, useEffect} from "react"
 import { TezosToolkit } from "@taquito/taquito"
 import { Alert, Card, Col, Row, Button, Spinner } from "react-bootstrap"
 import Parser from "html-react-parser"

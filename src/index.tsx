@@ -8,7 +8,6 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import { Buffer as BufferPolyfill } from "buffer"
 declare var Buffer: typeof BufferPolyfill
 globalThis.Buffer = BufferPolyfill
-declare var Buffer: typeof BufferPolyfill
 
 if (import.meta.env.DEV) {
   // In dev, let console.log go to terminal and console output. `console` arg

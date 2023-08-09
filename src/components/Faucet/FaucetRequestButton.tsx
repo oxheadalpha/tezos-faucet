@@ -1,11 +1,12 @@
 import axios from "axios"
-import React, { RefObject, useEffect, useRef, useState } from "react"
+import { RefObject, useEffect, useRef, useState } from "react"
 import { Button, Spinner } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
 import PowWorker from "../../powWorker?worker"
 
 import Config from "../../Config"
+import { minifyTezosAddress } from "../../lib/Utils"
 import {
   Challenge,
   ChallengeResponse,
@@ -13,7 +14,6 @@ import {
   StatusContext,
   VerifyResponse,
 } from "../../lib/Types"
-import { minifyTezosAddress } from "../../lib/Utils"
 
 export default function FaucetRequestButton({
   address,

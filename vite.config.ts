@@ -1,14 +1,14 @@
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
-import Terminal from "vite-plugin-terminal"
-
 import pkgJson from "./package.json"
 
+const isDevelopment = (mode) => mode === "development"
+
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(async ({ mode }) => ({
   build: {
     outDir: "build",
-    sourcemap: mode === "development" || "hidden",
+    sourcemap: isDevelopment(mode) || "hidden",
     commonjsOptions: {
       transformMixedEsModules: true,
     },
@@ -27,10 +27,13 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // In dev, let console.log go to terminal and console output. `console` arg
-    // doesn't work with vite-plugin-terminal plugin. See this issue.
+    // for vite-plugin-terminal doesn't work . See this issue.
     // https://github.com/patak-dev/vite-plugin-terminal/issues/23
     ...[
-      mode === "development" && Terminal({ output: ["terminal", "console"] }),
+      isDevelopment(mode) &&
+        (await import("vite-plugin-terminal")).default({
+          output: ["terminal", "console"],
+        }),
     ],
   ],
   define: {
