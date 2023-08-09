@@ -1,6 +1,6 @@
 {
     "application": {
-      "name": "Tezos Jakartanet faucet",
+      "name": "Tezos Ghostnet Faucet",
       "googleCaptchaSiteKey": "6LefC8QmAAAAAIXuoOhyI-FtALkYXZm4JK0GBYfb",
       "backendUrl": "http://localhost:3000",
       "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
@@ -16,9 +16,9 @@
       }
     },
     "network": {
-        "name": "Jakartanet",
-        "rpcUrl": "https://jakartanet.tezos.marigold.dev/",
-        "faucetAddress": "tz1cpdS3qoQBYCGohszPWS8Gdya6Wg2e4JnL",
-        "viewer": "https://jakarta.tzstats.com"
+      "name": "ghostnet",
+      "rpcUrl": "http://localhost:8732",
+      "faucetAddress": "tz1PWgj8DP6dKCm6shSfhY3FnXP5kr3Y9CiD",
+      "viewer": "https://ghost.tzstats.com"
     }
 }

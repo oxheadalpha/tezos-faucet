@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => ({
       external: ["virtual:terminal"],
     },
   },
+  esbuild: {
+    supported: {
+      "top-level-await": true,
+    },
+  },
   plugins: [
     react(),
     // In dev, let console.log go to terminal and console output. `console` arg

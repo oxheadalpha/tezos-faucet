@@ -1,15 +1,13 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process')
-const chalk = require('chalk');
-const { NetworkType } = require("@airgap/beacon-sdk");
+const path = require("path")
+const { execSync } = require("child_process")
+const chalk = require("chalk")
+const { NetworkType } = require("@airgap/beacon-types")
 
-console.log(chalk.cyan("Validating src/config.json file...\n"));
+console.log(chalk.cyan("Validating config.json file...\n"))
 
 function err(msg) {
-  console.log(chalk.bold.red(msg));
-
-  process.exit(1);
+  console.log(chalk.bold.red(msg))
+  process.exit(1)
 }
 
 function warn(msg) {
@@ -29,7 +27,7 @@ function checkForNPMPackageUpdate(_package) {
   if (packageIndex > -1) {
     installed = npmls.substring(packageIndex + pkgVersionPrefix.length).trim();
   }
-  
+
   const available = JSON.parse(execSync(`npm show ${_package} versions`).toLocaleString().replace(/'/g, "\""));
   let latestVersion = available[available.length - 1];
 
@@ -60,7 +58,7 @@ function versionLtThan(version, than) {
   for (let i=0; i<versionComponents.length; i++) {
     versionComponent = parseInt(versionComponents[i], 10);
     thanComponent = parseInt(thanComponents[i], 10);
-    
+
     if (isNaN(versionComponent) || isNaN(thanComponent)) {
       return null;
     }
@@ -92,16 +90,20 @@ function suggestEventualPackageUpdate(_package) {
   return false;
 }
 
-const CONFIG_FILE = path.resolve(__dirname, '../src/config.json');
+const CONFIG_FILE = path.resolve(__dirname, '../public/config.json');
+const Config = require(CONFIG_FILE)
 
-if (!fs.existsSync(CONFIG_FILE)) {
-  err("Unable to find src/config.json");
-}
-
-const Config = JSON.parse(fs.readFileSync(CONFIG_FILE).toString());
-if (!Config) {
-  err("src/config.json file is empty");
-}
+// Validate the config.json file with Typescript
+require("ts-node")
+  .create()
+  .compile(
+    `
+import { ConfigType } from "${path.resolve(__dirname, "../src/lib/Types")}"
+import configJson from "${CONFIG_FILE}"
+const config: ConfigType = configJson
+`,
+    "tmpConfig.ts"
+  )
 
 const networkKeys = Object.keys(NetworkType);
 
@@ -109,8 +111,6 @@ const configNetwork = Config.network.name.toLowerCase();
 if (!configNetwork || configNetwork.trim() === "") {
     err(`config.json is missing the network.name property. Please set network.name to one of: ${networkKeys.map(x => `"${NetworkType[x].toLowerCase()}"` ).join(", ")}`)
 }
-
-Config.network.networkType = undefined;
 
 const network = networkKeys.find(x => NetworkType[x].toLowerCase() === configNetwork);
 if (network) { // Happy path: config verified with success
