@@ -7,6 +7,8 @@ script is run from the CLI. We want the transaction hash to be the only output
 once the Tez is sent to the user.
 */
 const { error: log } = require("console")
+let VERBOSE = false
+const verboseLog = (message) => VERBOSE && log(message)
 
 const displayHelp = () => {
   log(`Usage: getTez.js [options] <address>
@@ -15,7 +17,8 @@ Options:
   -p, --profile    <value>  Set the profile ('user' for 1 Tez or 'baker' for 6000 Tez).
   -n, --network    <value>  Set the network name. See available networks at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
-  -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.`)
+  -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
+  -v, --verbose             Enable verbose logging.`)
 }
 
 const isMainModule = require.main === module
@@ -32,10 +35,10 @@ const handleError = (message, help) => {
   }
 }
 
-let address = ""
-let profile = ""
-let network = ""
-let faucetUrl = ""
+let address,
+  profile,
+  network,
+  faucetUrl = ""
 
 const parseArgs = async (args) => {
   // If the file is executed directly by node and not via import then argv will
@@ -65,6 +68,10 @@ const parseArgs = async (args) => {
       case "-f":
       case "--faucet-url":
         faucetUrl = args.shift()
+        break
+      case "-v":
+      case "--verbose":
+        VERBOSE = true
         break
       default:
         address = arg
@@ -114,7 +121,7 @@ const requestHeaders = {
 }
 
 const getChallenge = async () => {
-  log("Requesting PoW challenge...")
+  verboseLog("Requesting PoW challenge...")
 
   const response = await fetch(`${faucetUrl}/challenge`, {
     method: "POST",
@@ -132,14 +139,20 @@ const getChallenge = async () => {
 }
 
 const solvePow = (challenge, difficulty, challengeCounter) => {
-  log(`\nSolving challenge #${challengeCounter}...`)
+  if (isMainModule && process.stdout.isTTY) {
+    process.stderr.clearLine(0)
+    process.stderr.cursorTo(0)
+    process.stderr.write(`Solving challenge #${challengeCounter}... `)
+  } else {
+    verboseLog(`Solving challenge #${challengeCounter}...`)
+  }
 
   let nonce = 0
   while (true) {
     const input = `${challenge}:${nonce}`
     const hash = crypto.createHash("sha256").update(input).digest("hex")
     if (hash.startsWith("0".repeat(difficulty))) {
-      log(`Solution found`)
+      verboseLog(`Solution found`)
       return { solution: hash, nonce }
     }
     nonce++
@@ -147,7 +160,7 @@ const solvePow = (challenge, difficulty, challengeCounter) => {
 }
 
 const verifySolution = async (solution, nonce) => {
-  log("Verifying solution...")
+  verboseLog("Verifying solution...")
 
   const response = await fetch(`${faucetUrl}/verify`, {
     method: "POST",
@@ -163,11 +176,11 @@ const verifySolution = async (solution, nonce) => {
   }
 
   if (txHash) {
-    log(`Solution is valid`)
-    log(`Tez sent! Check transaction: ${txHash}`)
+    verboseLog(`Solution is valid`)
+    verboseLog(`Tez sent! Check transaction: ${txHash}\n`)
     return { txHash }
   } else if (challenge && difficulty && challengeCounter) {
-    log(`Solution is valid`)
+    verboseLog(`Solution is valid\n`)
     return { challenge, difficulty, challengeCounter }
   } else {
     handleError(`Error verifying solution: ${message}`)
@@ -180,15 +193,20 @@ const getTez = async (args) => {
   let { challenge, difficulty, challengeCounter } = await getChallenge()
 
   while (challenge && difficulty && challengeCounter) {
-    const { solution, nonce } = solvePow(challenge, difficulty, challengeCounter)
+    verboseLog({ challenge, difficulty, challengeCounter })
+
+    const { solution, nonce } = solvePow(
+      challenge,
+      difficulty,
+      challengeCounter
+    )
+
+    verboseLog({ nonce, solution })
 
     let txHash
-    ;({ challenge, difficulty, challengeCounter, txHash } = await verifySolution(
-      solution,
-      nonce
-    ))
+    ;({ challenge, difficulty, challengeCounter, txHash } =
+      await verifySolution(solution, nonce))
 
-    // log({ challenge, difficulty, nonce, challengeCounter })
     if (txHash) return txHash
   }
 }
