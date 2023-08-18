@@ -17,16 +17,18 @@ import {
 
 export default function FaucetRequestButton({
   address,
-  network,
-  status,
-  profile,
   amount,
+  disabled,
+  network,
+  profile,
+  status,
 }: {
   address: string
-  network: Network
-  status: StatusContext
-  profile: string
   amount: number
+  disabled: boolean
+  network: Network
+  profile: string
+  status: StatusContext
 }) {
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
@@ -197,7 +199,7 @@ export default function FaucetRequestButton({
 
       <Button
         variant="primary"
-        disabled={status.isLoading || !address}
+        disabled={disabled}
         onClick={getTez}
       >
         <DropletFill />

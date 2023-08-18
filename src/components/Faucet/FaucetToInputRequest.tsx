@@ -16,11 +16,12 @@ export default function FaucetToInputRequest({
   const [inputClass, setInputClass] = useState<string>("")
 
   const inputId: string = network.name + "-to"
+  const disableButton = status.isLoading || inputClass !== "is-valid"
 
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     const value: string = event.target.value
 
-    if (validateKeyHash(value) === 3 || value.length === 0) {
+    if (value.length === 0 || validateKeyHash(value) === 3) {
       setInputToAddr(value)
 
       if (value.length > 0) setInputClass("is-valid")
@@ -48,20 +49,22 @@ export default function FaucetToInputRequest({
       <Row>
         <Col>
           <FaucetRequestButton
-            network={network}
             address={inputToAddr}
-            status={status}
-            profile={Config.application.profiles.user.profile}
             amount={Config.application.profiles.user.amount}
+            disabled={disableButton}
+            network={network}
+            profile={Config.application.profiles.user.profile}
+            status={status}
           />
         </Col>
         <Col>
           <FaucetRequestButton
-            network={network}
             address={inputToAddr}
-            status={status}
-            profile={Config.application.profiles.baker.profile}
             amount={Config.application.profiles.baker.amount}
+            disabled={disableButton}
+            network={network}
+            profile={Config.application.profiles.baker.profile}
+            status={status}
           />
         </Col>
       </Row>
