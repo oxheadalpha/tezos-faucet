@@ -6,11 +6,9 @@
       "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
       "profiles": {
         "user": {
-          "profile": "USER",
           "amount": 1
         },
         "baker": {
-          "profile": "BAKER",
           "amount": 6000
         }
       }

@@ -4,7 +4,6 @@ import { BeaconWallet } from "@taquito/beacon-wallet"
 import { NetworkType } from "@airgap/beacon-sdk"
 
 type BackendProfile = {
-  profile: string
   amount: number
 }
 

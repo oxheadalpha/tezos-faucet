@@ -68,7 +68,6 @@ export default function SplittedFaucet({
               network={network}
               user={user}
               status={statusContext}
-              Tezos={Tezos}
             />
           </Col>
           <Col className="faucet-part">
