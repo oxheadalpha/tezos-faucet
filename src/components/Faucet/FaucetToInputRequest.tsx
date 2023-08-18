@@ -47,26 +47,20 @@ export default function FaucetToInputRequest({
         </Form.Control.Feedback>
       </Form.Group>
       <Row>
-        <Col>
-          <FaucetRequestButton
-            address={inputToAddr}
-            amount={Config.application.profiles.user.amount}
-            disabled={disableButton}
-            network={network}
-            profile={Config.application.profiles.user.profile}
-            status={status}
-          />
-        </Col>
-        <Col>
-          <FaucetRequestButton
-            address={inputToAddr}
-            amount={Config.application.profiles.baker.amount}
-            disabled={disableButton}
-            network={network}
-            profile={Config.application.profiles.baker.profile}
-            status={status}
-          />
-        </Col>
+        {Object.entries(Config.application.profiles).map(
+          ([profile, { amount }]) => (
+            <Col key={profile} lg={6}>
+              <FaucetRequestButton
+                address={inputToAddr}
+                amount={amount}
+                disabled={disableButton}
+                network={network}
+                profile={profile}
+                status={status}
+              />
+            </Col>
+          )
+        )}
       </Row>
     </>
   )
