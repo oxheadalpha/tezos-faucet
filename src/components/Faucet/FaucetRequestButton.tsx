@@ -94,7 +94,6 @@ export default function FaucetRequestButton({
 
     powWorker.terminate()
     status.setPowWorker(null)
-    console.log({ powSolution })
     return powSolution
   }
 
@@ -102,14 +101,12 @@ export default function FaucetRequestButton({
     try {
       let { challenge, difficulty, challengeCounter } = await getChallenge()
       while (challenge && difficulty && challengeCounter) {
-        console.log({ challenge, difficulty, challengeCounter })
         const powSolution = await solvePow(
           challenge,
           difficulty,
           challengeCounter
         )
         const response = await verifySolution(powSolution)
-        console.log({ response })
 
         challenge = response.challenge
         difficulty = response.difficulty

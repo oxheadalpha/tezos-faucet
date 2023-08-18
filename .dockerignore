@@ -1,6 +1,13 @@
+.dockerignore
+.DS_Store
+.env*
+.git
 .github
-build
+.gitignore
+.vscode
+dist
 Dockerfile
 LICENSE.md
 node_modules
+npm-debug.log
 README.md

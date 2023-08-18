@@ -11,11 +11,11 @@ const { error: log } = require("console")
 const displayHelp = () => {
   log(`Usage: getTez.js [options] <address>
 Options:
-  -h, --help             Display help information.
-  -p, --profile <value>  Set the profile ('user' for 1 Tez or 'baker' for 6000 Tez).
-  -n, --network <value>  Set the network name. See available networks at https://teztnets.xyz.
-                         Ignored if --faucet-url is set.
-  -f, --faucet-url <value> Set the custom faucet URL. Ignores --network.`)
+  -h, --help                Display help information.
+  -p, --profile    <value>  Set the profile ('user' for 1 Tez or 'baker' for 6000 Tez).
+  -n, --network    <value>  Set the network name. See available networks at https://teztnets.xyz.
+                            Ignored if --faucet-url is set.
+  -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.`)
 }
 
 const isMainModule = require.main === module
