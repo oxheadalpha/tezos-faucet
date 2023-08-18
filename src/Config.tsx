@@ -31,4 +31,8 @@ if (!network) {
 Config.network.networkType = NetworkType[network]
 Config.application.isBeaconWallet = !!Config.network.networkType
 
+export const sortedProfiles = Object.entries(Config.application.profiles).sort(
+  ([, profileA], [, profileB]) => profileA.amount - profileB.amount
+)
+
 export default Config
