@@ -14,7 +14,7 @@
       }
     },
     "network": {
-      "name": "ghostnet",
+      "name": "Ghostnet",
       "rpcUrl": "http://localhost:8732",
       "faucetAddress": "tz1PWgj8DP6dKCm6shSfhY3FnXP5kr3Y9CiD",
       "viewer": "https://ghost.tzstats.com"
