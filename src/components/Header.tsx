@@ -10,7 +10,7 @@ function Header() {
           <Navbar.Brand>
             <a href="https://www.oxheadalpha.com" target="_blank">
               <img
-                src="/public/oxheadalpha.svg"
+                src="/oxheadalpha.svg"
                 className="d-inline-block align-top"
                 width="30"
                 height="30"

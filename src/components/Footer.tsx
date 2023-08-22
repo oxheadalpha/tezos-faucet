@@ -28,7 +28,7 @@ function Footer() {
               style={{ textDecoration: "none" }}
             >
               <img
-                src="/public/oxheadalpha.svg"
+                src="/oxheadalpha.svg"
                 alt="Oxhead Alpha Logo"
                 height="24"
               />
