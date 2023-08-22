@@ -142,9 +142,10 @@ export default function SplittedFaucet({
           </p>
           <p>
             The number and difficulty of these challenges depend on the amount
-            of Tez you request. The more Tez you ask for, the more challenges
-            your browser will need to solve. This means it might take a bit
-            longer to receive your Tez if you request a larger amount.
+            of Tez you request. The more Tez you ask for, the higher the
+            difficulty and the more challenges your browser will need to solve.
+            This means it might take a bit longer to receive your Tez if you
+            request a larger amount.
           </p>
           <p>
             Don't worry, your browser will automatically solve these challenges.

@@ -194,6 +194,7 @@ export default function FaucetRequestButton({
       <ReCAPTCHA
         ref={recaptchaRef}
         size="invisible"
+        badge="bottomleft"
         sitekey={Config.application.googleCaptchaSiteKey}
       />
 
