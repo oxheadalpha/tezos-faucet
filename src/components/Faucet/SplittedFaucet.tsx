@@ -23,7 +23,7 @@ export default function SplittedFaucet({
   const [showPowProgress, setShowPowProgress] = useState(false)
   const [powWorker, setPowWorker] = useState<Worker | null>(null)
   const [showAlert, setShowAlert] = useState(
-    localStorage.getItem("showAlert") === "true"
+    localStorage.getItem("showAlert") !== "false"
   )
 
   const statusContext: StatusContext = {
@@ -59,9 +59,9 @@ export default function SplittedFaucet({
   }, [statusType, showAlert])
 
   return (
-    <Card className="mb-3">
+    <Card className="mt-3">
       <Card.Header>
-        <Card.Title>{network.name} faucet</Card.Title>
+        <Card.Title>{network.name} Faucet</Card.Title>
       </Card.Header>
 
       <Card.Body>
@@ -122,7 +122,7 @@ export default function SplittedFaucet({
         <div className="d-flex justify-content-end">
           {!showAlert && (
             <Button
-              variant="info"
+              variant="secondary"
               onClick={() => {
                 setShowAlert(true)
                 localStorage.setItem("showAlert", "true")
@@ -133,7 +133,7 @@ export default function SplittedFaucet({
           )}
         </div>
 
-        <Alert show={showAlert} variant="info" className="mt-3">
+        <Alert show={showAlert} variant="secondary" className="mt-3">
           <p>
             To ensure fair distribution of Tez, we've introduced proof of work
             challenges. Before you receive your Tez, your browser will need to
@@ -141,7 +141,7 @@ export default function SplittedFaucet({
             prevent abuse and ensure everyone gets their fair share.
           </p>
           <p>
-            The number and difficulty of these challenges depend on the amount
+            The number and difficulty of these challenges depends on the amount
             of Tez you request. The more Tez you ask for, the higher the
             difficulty and the more challenges your browser will need to solve.
             This means it might take a bit longer to receive your Tez if you
@@ -149,14 +149,14 @@ export default function SplittedFaucet({
           </p>
           <p>
             Don't worry, your browser will automatically solve these challenges.
-            All you need to do is wait a little while for the process to
-            complete before you receive your Tez.
+            All you need to do is leave your window open and wait a little while
+            for the process to complete before you receive your Tez.
           </p>
 
           <hr />
           <div className="d-flex justify-content-end">
             <Button
-              variant="outline-info"
+              variant="outline-secondary"
               onClick={() => {
                 setShowAlert(false)
                 localStorage.setItem("showAlert", "false")
