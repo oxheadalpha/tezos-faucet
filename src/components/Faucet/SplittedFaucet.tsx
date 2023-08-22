@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react"
 import { TezosToolkit } from "@taquito/taquito"
-import { Alert, Card, Col, Row, Button, Spinner, Form } from "react-bootstrap"
+import { Alert, Card, Col, Row, Button, Spinner } from "react-bootstrap"
 import Parser from "html-react-parser"
 import FaucetToWalletRequest from "./FaucetToWalletRequest"
 import FaucetToInputRequest from "./FaucetToInputRequest"
+import Config from "../../Config"
+
 import { Network, UserContext, StatusContext } from "../../lib/Types"
 
 export default function SplittedFaucet({
@@ -117,55 +119,61 @@ export default function SplittedFaucet({
             )}
           </Col>
         </Row>
-        <hr />
 
-        <div className="d-flex justify-content-end">
-          {!showAlert && (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setShowAlert(true)
-                localStorage.setItem("showAlert", "true")
-              }}
-            >
-              Show Info
-            </Button>
-          )}
-        </div>
+        {!Config.application.disableChallenges && (
+          <>
+            <hr />
+            <div className="d-flex justify-content-end">
+              {!showAlert && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowAlert(true)
+                    localStorage.setItem("showAlert", "true")
+                  }}
+                >
+                  Show Info
+                </Button>
+              )}
+            </div>
 
-        <Alert show={showAlert} variant="secondary" className="mt-3">
-          <p>
-            To ensure fair distribution of Tez, we've introduced proof of work
-            challenges. Before you receive your Tez, your browser will need to
-            solve these challenges. This is an automatic process that helps us
-            prevent abuse and ensure everyone gets their fair share.
-          </p>
-          <p>
-            The number and difficulty of these challenges depends on the amount
-            of Tez you request. The more Tez you ask for, the higher the
-            difficulty and the more challenges your browser will need to solve.
-            This means it might take a bit longer to receive your Tez if you
-            request a larger amount.
-          </p>
-          <p>
-            Don't worry, your browser will automatically solve these challenges.
-            All you need to do is leave your window open and wait a little while
-            for the process to complete before you receive your Tez.
-          </p>
+            <Alert show={showAlert} variant="secondary" className="mt-3">
+              <p>
+                To ensure fair distribution of Tez, we've introduced proof of
+                work challenges. Before you receive your Tez, your browser will
+                need to solve these challenges. This is an automatic process
+                that helps us prevent abuse and ensure everyone gets their fair
+                share.
+              </p>
+              <p>
+                The number and difficulty of these challenges depends on the
+                amount of Tez you request. The more Tez you ask for, the higher
+                the difficulty and the more challenges your browser will need to
+                solve. This means it might take a bit longer to receive your Tez
+                if you request a larger amount.
+              </p>
+              <p>
+                Don't worry, your browser will automatically solve these
+                challenges. All you need to do is leave your window open and
+                wait a little while for the process to complete before you
+                receive your Tez.
+              </p>
 
-          <hr />
-          <div className="d-flex justify-content-end">
-            <Button
-              variant="outline-secondary"
-              onClick={() => {
-                setShowAlert(false)
-                localStorage.setItem("showAlert", "false")
-              }}
-            >
-              Hide
-            </Button>
-          </div>
-        </Alert>
+              <hr />
+              <div className="d-flex justify-content-end">
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => {
+                    setShowAlert(false)
+                    localStorage.setItem("showAlert", "false")
+                  }}
+                >
+                  Hide
+                </Button>
+              </div>
+            </Alert>
+          </>
+        )}
       </Card.Body>
     </Card>
   )

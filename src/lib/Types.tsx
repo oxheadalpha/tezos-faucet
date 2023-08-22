@@ -19,6 +19,7 @@ type ApplicationConfig = {
   backendUrl: string
   githubRepo: string
   profiles: Profiles
+  disableChallenges?: boolean
 }
 
 export type ConfigType = {

@@ -4,6 +4,7 @@
       "googleCaptchaSiteKey": "6LefC8QmAAAAAIXuoOhyI-FtALkYXZm4JK0GBYfb",
       "backendUrl": "http://localhost:3000",
       "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
+      "disableChallenges": false,
       "profiles": {
         "user": {
           "amount": 1

@@ -101,6 +101,12 @@ export default function FaucetRequestButton({
 
   const getTez = async () => {
     try {
+      startLoading()
+
+      if (Config.application.disableChallenges) {
+        return verifySolution({ solution: "", nonce: 0 })
+      }
+
       let { challenge, difficulty, challengeCounter } = await getChallenge()
       while (challenge && difficulty && challengeCounter) {
         const powSolution = await solvePow(
@@ -121,8 +127,6 @@ export default function FaucetRequestButton({
 
   const getChallenge = async (): Promise<Partial<Challenge>> => {
     const captchaToken = await execCaptcha()
-
-    startLoading()
 
     try {
       const input = {
@@ -198,11 +202,7 @@ export default function FaucetRequestButton({
         sitekey={Config.application.googleCaptchaSiteKey}
       />
 
-      <Button
-        variant="primary"
-        disabled={disabled}
-        onClick={getTez}
-      >
+      <Button variant="primary" disabled={disabled} onClick={getTez}>
         <DropletFill />
         &nbsp;
         {isLocalLoading
