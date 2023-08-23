@@ -1,6 +1,7 @@
 body {
   position: relative;
   min-height: 100vh;
+  padding-top: 70px; /* Increased height of the header */
   padding-bottom: 70px; /* Increased height of the footer */
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

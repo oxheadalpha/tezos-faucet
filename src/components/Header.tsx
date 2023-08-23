@@ -4,7 +4,7 @@ import Config from "../Config"
 
 function Header() {
   return (
-    <Navbar bg="light" expand="lg">
+    <Navbar bg="light" expand="lg" fixed="top">
       <Container fluid>
         <Nav>
           <Navbar.Brand>
