@@ -6,7 +6,7 @@ const { APP_DESCRIPTION, APP_VERSION } = import.meta.env
 function Footer() {
   return (
     <footer className="footer py-3 bg-light">
-      <Container>
+      <Container fluid>
         <Row>
           <Col
             md={7}

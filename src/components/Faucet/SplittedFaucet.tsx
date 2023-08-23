@@ -61,7 +61,7 @@ export default function SplittedFaucet({
   }, [statusType, showAlert])
 
   return (
-    <Card className="mt-3">
+    <Card>
       <Card.Header>
         <Card.Title>{network.name} Faucet</Card.Title>
       </Card.Header>
