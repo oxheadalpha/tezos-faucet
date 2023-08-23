@@ -101,9 +101,8 @@ export default function FaucetRequestButton({
 
   const getTez = async () => {
     try {
-      startLoading()
-
       if (Config.application.disableChallenges) {
+        startLoading()
         return verifySolution({ solution: "", nonce: 0 })
       }
 
@@ -126,9 +125,11 @@ export default function FaucetRequestButton({
   }
 
   const getChallenge = async (): Promise<Partial<Challenge>> => {
-    const captchaToken = await execCaptcha()
-
     try {
+      const captchaToken = await execCaptcha()
+
+      startLoading()
+
       const input = {
         address,
         captchaToken,
