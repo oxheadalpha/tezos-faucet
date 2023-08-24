@@ -14,8 +14,8 @@ const displayHelp = () => {
   log(`Usage: getTez.js [options] <address>
 Options:
   -h, --help                Display help information.
-  -p, --profile    <value>  Set the profile ('user' for 1 Tez or 'baker' for 6000 Tez).
-  -n, --network    <value>  Set the network name. See available networks at https://teztnets.xyz.
+  -p, --profile    <value>  Set the profile ('user' or 'baker').
+  -n, --network    <value>  Set the faucet's network name. See available networks at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
   -v, --verbose             Enable verbose logging.`)
@@ -120,6 +120,22 @@ const requestHeaders = {
   "Content-Type": "application/x-www-form-urlencoded",
 }
 
+const getInfo = async () => {
+  verboseLog("Requesting faucet info...")
+
+  const response = await fetch(`${faucetUrl}/info`, {
+    headers: requestHeaders,
+  })
+
+  const body = await response.json()
+
+  if (!response.ok) {
+    handleError(`ERROR: ${body.message}`)
+  }
+
+  return body
+}
+
 const getChallenge = async () => {
   verboseLog("Requesting PoW challenge...")
 
@@ -189,6 +205,13 @@ const verifySolution = async (solution, nonce) => {
 
 const getTez = async (args) => {
   await parseArgs(args)
+
+  const faucetInfo = await getInfo()
+
+  if (faucetInfo.challengesDisabled) {
+    const txHash = (await verifySolution("", 0)).txHash
+    return txHash
+  }
 
   let { challenge, difficulty, challengeCounter } = await getChallenge()
 
