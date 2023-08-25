@@ -36,7 +36,18 @@ div.balances {
     font-size:1em!important;
 }
 
-footer {
-    margin-top: 30px;
-    text-align: center;
+.logotext_alpha {
+  display: inline-block;
+  font-family: 'Titillium Web';
+    --tw-text-opacity: 1;
+    color: rgba(229, 38, 47, var(--tw-text-opacity));
+    font-weight: 700;
+}
+
+.logotext_oxhead {
+  display: inline-block;
+  font-family: 'Titillium Web';
+    --tw-text-opacity: 1;
+    color: rgba(30, 38, 166, var(--tw-text-opacity));
+    font-weight: 900;
 }

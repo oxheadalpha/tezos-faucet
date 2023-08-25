@@ -1,87 +1,180 @@
-import { useState, useEffect, SetStateAction, Dispatch } from "react";
-import { TezosToolkit } from '@taquito/taquito';
-import { Alert, Card, Col, Row } from "react-bootstrap";
-import Parser from 'html-react-parser';
-import FaucetToWalletRequest from "./FaucetToWalletRequest";
-import FaucetToInputRequest from "./FaucetToInputRequest";
-import { Network, UserContext } from "../../lib/Types";
+import { useState, useEffect } from "react"
+import { TezosToolkit } from "@taquito/taquito"
+import { Alert, Card, Col, Row, Button, Spinner } from "react-bootstrap"
+import Parser from "html-react-parser"
+import FaucetToWalletRequest from "./FaucetToWalletRequest"
+import FaucetToInputRequest from "./FaucetToInputRequest"
+import Config from "../../Config"
 
-type StatusContext = {
-    isLoading: boolean;
-    statusType: string;
-    status: string;
-    setLoading: Dispatch<SetStateAction<boolean>>;
-    setStatusType: Dispatch<SetStateAction<string>>;
-    setStatus: Dispatch<SetStateAction<string>>;
+import { Network, UserContext, StatusContext } from "../../lib/Types"
+
+export default function SplittedFaucet({
+  network,
+  user,
+  Tezos,
+}: {
+  network: Network
+  user: UserContext
+  Tezos: TezosToolkit
+}) {
+  const faucetAddress = network.faucetAddress
+  const [faucetBalance, setFaucetBalance] = useState<number>(0)
+  const [isLoading, setLoading] = useState<boolean>(false)
+  const [status, setStatus] = useState<string>("")
+  const [statusType, setStatusType] = useState<string>("")
+  const [showPowProgress, setShowPowProgress] = useState(false)
+  const [powWorker, setPowWorker] = useState<Worker | null>(null)
+  const [showAlert, setShowAlert] = useState(
+    localStorage.getItem("showAlert") !== "false"
+  )
+
+  const statusContext: StatusContext = {
+    isLoading,
+    setLoading,
+    status,
+    setStatus,
+    statusType,
+    setStatusType,
+    powWorker,
+    setPowWorker,
+  }
+
+  const readBalances = async (): Promise<void> => {
+    try {
+      const faucetBalance = await Tezos.tz.getBalance(faucetAddress)
+      setFaucetBalance(faucetBalance.toNumber())
+
+      const userBalance = await Tezos.tz.getBalance(user.userAddress)
+      user.setUserBalance(userBalance.toNumber())
+    } catch (error) {
+      //console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    readBalances()
+  }, [isLoading])
+
+  useEffect(() => {
+    if (statusType && statusType !== "") setShowPowProgress(true)
+    if (!showAlert) setShowAlert(false)
+  }, [statusType, showAlert])
+
+  return (
+    <Card>
+      <Card.Header>
+        <Card.Title>{network.name} Faucet</Card.Title>
+      </Card.Header>
+
+      <Card.Body>
+        <Row>
+          <Col className="faucet-part-title">Fund your web wallet</Col>
+          <Col className="faucet-part-title">Or fund any address</Col>
+        </Row>
+        <Row>
+          <Col className="faucet-part">
+            <FaucetToWalletRequest
+              network={network}
+              user={user}
+              status={statusContext}
+            />
+          </Col>
+          <Col className="faucet-part">
+            <FaucetToInputRequest network={network} status={statusContext} />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <br />
+            {showPowProgress && status && (
+              <Alert
+                variant={statusType}
+                onClose={() => setShowPowProgress(false)}
+                dismissible={!isLoading}
+              >
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="d-inline-block">
+                    {Parser(status)}
+                    {isLoading && <Spinner size="sm" className="ms-1" />}
+                  </div>
+                  {isLoading && (
+                    <div>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          if (powWorker) {
+                            powWorker.terminate()
+                            setPowWorker(null)
+                            setLoading(false)
+                            setShowPowProgress(false)
+                          }
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Alert>
+            )}
+          </Col>
+        </Row>
+
+        {!Config.application.disableChallenges && (
+          <>
+            <hr />
+            <div className="d-flex justify-content-end">
+              {!showAlert && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowAlert(true)
+                    localStorage.setItem("showAlert", "true")
+                  }}
+                >
+                  Show Info
+                </Button>
+              )}
+            </div>
+
+            <Alert show={showAlert} variant="secondary" className="mt-3">
+              <p>
+                To ensure fair distribution of Tez, we've introduced proof of
+                work challenges. Before you receive your Tez, your browser will
+                need to solve these challenges. This is an automatic process
+                that helps us prevent abuse and ensure everyone gets their fair
+                share.
+              </p>
+              <p>
+                The number and difficulty of these challenges depends on the
+                amount of Tez you request. The more Tez you ask for, the higher
+                the difficulty and the more challenges your browser will need to
+                solve. This means it might take a bit longer to receive your Tez
+                if you request a larger amount.
+              </p>
+              <p>
+                Don't worry, your browser will automatically solve these
+                challenges. All you need to do is leave your window open and
+                wait a little while for the process to complete before you
+                receive your Tez.
+              </p>
+
+              <hr />
+              <div className="d-flex justify-content-end">
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => {
+                    setShowAlert(false)
+                    localStorage.setItem("showAlert", "false")
+                  }}
+                >
+                  Hide
+                </Button>
+              </div>
+            </Alert>
+          </>
+        )}
+      </Card.Body>
+    </Card>
+  )
 }
-
-function SplittedFaucet({ network, user, Tezos }: { network: Network, user: UserContext, Tezos: TezosToolkit }) {
-
-    const faucetAddress = network.faucetAddress;
-    const [faucetBalance, setFaucetBalance] = useState<number>(0);
-
-    const [isLoading, setLoading] = useState<boolean>(false);
-    const [status, setStatus] = useState<string>("");
-    const [statusType, setStatusType] = useState<string>("");
-    const [showAlert, setShowAlert] = useState(false);
-
-    const statusContext: StatusContext = { isLoading, statusType, status, setLoading, setStatusType, setStatus };
-
-    const readBalances = async (): Promise<void> => {
-        try {
-            const faucetBalance = await Tezos.tz.getBalance(faucetAddress);
-            setFaucetBalance(faucetBalance.toNumber());
-
-            const userBalance = await Tezos.tz.getBalance(user.userAddress);
-            user.setUserBalance(userBalance.toNumber());
-        } catch (error) {
-            //console.log(error);
-        }
-    };
-
-    useEffect(() => {
-        readBalances();
-    }, [isLoading]);
-
-    useEffect(() => {
-        if (statusType && statusType !== "")
-            setShowAlert(true);
-    }, [statusType]);
-
-    return (
-        <Card>
-            <Card.Header>{network.name} faucet</Card.Header>
-            <Card.Body>
-                <Row>
-                    <Col className="faucet-part-title">
-                        Fund your web wallet
-                    </Col>
-                    <Col className="faucet-part-title">
-                        Or fund any address
-                    </Col>
-                </Row>
-                <Row>
-                    <Col className="faucet-part">
-                        <FaucetToWalletRequest network={network} user={user} status={statusContext} Tezos={Tezos} />
-                    </Col>
-                    <Col className="faucet-part">
-                        <FaucetToInputRequest network={network} status={statusContext} />
-                    </Col>
-                </Row>
-                <Row>
-                    <Col>
-                        <br />
-                        {showAlert && status &&
-                            <Alert variant={statusType} onClose={() => setShowAlert(false)} dismissible>
-                                {Parser(status)}
-                            </Alert>
-                        }
-                    </Col>
-                </Row>
-
-            </Card.Body>
-        </Card>
-    )
-}
-
-export default SplittedFaucet;

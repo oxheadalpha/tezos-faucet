@@ -1,58 +1,60 @@
-# Tezos faucet
+# Tezos Faucet Frontend
 
 ## Presentation
 
-One-click faucet for Tezos.
+A one-click faucet for Tezos, now enhanced with a PoW (Proof of Work) challenge to ensure secure and fair Tez distribution.
 
 ### Made with
 
-- React
-- Craco
 - Typescript
+- Vite
+- React
+- Bootstrap
 - Taquito
 - Beacon Wallet
-- ReactBootstrap
 
 ## Overview
 
-This front-end faucet is build on top of a backend (https://github.com/oxheadalpha/tezos-faucet-backend).
+The faucet's backend code can be located at [tezos-faucet-backend](https://github.com/oxheadalpha/tezos-faucet-backend). The backend handles the faucet's private key, CAPTCHA secret, PoW challenge creation and solution verification, and the amounts of Tez sent.
 
-Backend handles:
-- faucet private key
-- captcha secret
-- amounts sent
+Sent amounts and challenge details are configured via `profiles`. This enforces security, avoiding a user trying to change amounts in frontend javascript code and drying out the faucet. Two profiles are created by default: **user**, to get 1 xtz and **baker** to get 6000 xtz.
 
-Sent amounts are configured in backend, using a conf named `profiles`.
+### Proof of Work (PoW) Challenge
 
-2 profiles are created: **User**, to get 1 xtz and **Backer** to get 6000 xtz.
+To mitigate potential abuse and ensure a fair distribution of Tez, users are now required to solve computational challenges before receiving their Tez. This PoW mechanism discourages bots and other malicious actors from exploiting the faucet.
 
-Faucet calls backend using the target address and the given profile name. Then backend send as many xtz as configured on its side for the given profile.
+### Application Flow
 
-This enforces security, avoiding user to change amount in front javascript code and dry out the faucet.
+1. **Initiating the Process**: Upon a Tez request, the frontend communicates with the `/challenge` endpoint of the backend, providing essential details such as the user's address and the profile type.
+2. **Receiving and Solving the Challenge**: The backend then sends a challenge. The difficulty and amount of challenges to be solved depends on factors such as if a CAPTCHA token was submitted and how much Tez was requested. The browser will create a webworker which will begin the process of finding a solution.
+3. **Submitting and Verifying the Solution**: After solving, the frontend sends the solution to the `/verify` endpoint. The backend then checks its validity. Assuming it is valid, if more challenges are pending, the user proceeds to solve them. Once all challenges are cleared, Tez is sent to the user's account.
+
+## Programmatic Faucet Usage
+
+We provide a [`getTez.js`](./scripts/getTez.js) script for programmatic faucet usage. This script can be run from a JavaScript program or directly from a shell.
+
+Please note that the `getTez.js` script does not use CAPTCHA. Therefore, challenges can be configured to make them more difficult and require more of them to be solved when using the programmatic faucet.
 
 ## Setup
 
 To setup the faucet for a new network:
 
-1. Update Beacon Wallet lib to make sure it will handle the new network.
+1. Update Beacon Wallet lib to make sure it will handle the new network
 2. Deploy a new instance of backend
 3. Configure faucet to use backend
 4. Deploy faucet
 
-
 ### 1. Update Beacon Wallet configuration for new network
 
-Currently supported networks: 
+Currently supported networks include:
 
 - Mainnet
+- Ghostnet
 - Mondaynet
 - Dailynet
-- Ghostnet
-- Ithacanet
-- Jakartanet
-- Kathmandunet
+- Nairobinet
 
-To add a new network, first check that `@airgap/beacon-sdk` handles it ([check their config](https://github.com/airgap-it/beacon-sdk/blob/312226a3588eddd804044b52dfcf1d0512f1a9df/packages/beacon-types/src/types/beacon/NetworkType.ts)), then update:
+To add a new network, first check that `@airgap/beacon-sdk` handles it ([check their config on the latest release](https://github.com/airgap-it/beacon-sdk/blob/v4.0.6/packages/beacon-types/src/types/beacon/NetworkType.ts)), then update:
 
 ```
 npm i @airgap/beacon-sdk
@@ -68,34 +70,33 @@ See https://github.com/oxheadalpha/tezos-faucet-backend
 
 **Application configuration:**
 
-`name`: application name, displayed in header
+- `name`: application name, displayed in header
 
-`googleCaptchaSiteKey`: Google ReCAPTCHA public site key
+- `googleCaptchaSiteKey`: Google ReCAPTCHA public site key
 
-`backendUrl`: Base URL of backend to connect to.
+- `backendUrl`: Base URL of faucet backend to connect to.
 
-`githubRepo`: URL of Github repository (displayed in header with Github icon).
+- `githubRepo`: URL of Github repository (displayed in header with Github icon).
 
-`profiles`: backend profiles, must match backend configuration.
+- `disableChallenges`: If PoW challenges need to be solved before receiving Tez. The backend must also disable challenges. Defaults to `false`.
 
--- `user`: user profile, to get a single XTZ
+- `profiles`: backend profiles, must match backend configuration.
 
--- `baker`: baker profile, to get 6000 XTZ
+- - `user`: user profile, to get 1 XTZ
 
--- -- `profile`: backend profile ID
+- - `baker`: baker profile, to get 6000 XTZ
 
--- -- `amount`: amount given for the profile, for display only.
-
+- - - `amount`: amount given for the profile, for display only.
 
 **Network configuration:**
 
-`name`: network name. Must match one of [@airgap/beacon-sdk NetworkType]((https://github.com/airgap-it/beacon-sdk/blob/312226a3588eddd804044b52dfcf1d0512f1a9df/packages/beacon-types/src/types/beacon/NetworkType.ts)) value (case insensitive). Also used to be displayed.
+- `name`: network name. Must match one of [@airgap/beacon-sdk NetworkType](https://github.com/airgap-it/beacon-sdk/blob/v4.0.6/packages/beacon-types/src/types/beacon/NetworkType.ts) value (case insensitive). Also used to be displayed.
 
-`rpcUrl`: Tezos network RPC endpoint to be used by faucet
+- `rpcUrl`: Tezos network RPC endpoint to be used by faucet
 
-`faucetAddress`: public Tezos address of faucet
+- `faucetAddress`: public Tezos address of faucet
 
-```viewer```: URL of a viewer that displays operation detail like `http://viewer-url.com/{tx_hash}` (eg. https://jakarta.tzstats.com)
+- `viewer`: URL of a block explorer that displays operation detail like `http://viewer-url.com/{tx_hash}` (eg. https://ghost.tzstats.com)
 
 ### 4. Deploy
 
@@ -108,6 +109,7 @@ docker build . -t tezos-faucet
 ```
 
 Run Docker image:
+
 ```
 docker run -p 8080:8080 tezos-faucet
 ```

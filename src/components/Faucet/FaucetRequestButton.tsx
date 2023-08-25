@@ -1,112 +1,227 @@
-import React, { RefObject, useState } from "react";
+import axios from "axios"
+import { RefObject, useEffect, useRef, useState } from "react"
 import { Button, Spinner } from "react-bootstrap"
-import { DropletFill } from "react-bootstrap-icons";
-import ReCAPTCHA from "react-google-recaptcha";
-import Config from "../../Config";
-import { minifyTezosAddress } from "../../lib/Utils";
-import axios from "axios";
-import { BackendResponse, Network } from "../../lib/Types";
+import { DropletFill } from "react-bootstrap-icons"
+import ReCAPTCHA from "react-google-recaptcha"
+import PowWorker from "../../powWorker?worker"
 
-function FaucetRequestButton({ to, network, status, profile, amount }: { to: string, network: Network, status: any, profile: string, amount: number }) {
+import Config from "../../Config"
+import { minifyTezosAddress } from "../../lib/Utils"
+import {
+  Challenge,
+  ChallengeResponse,
+  Network,
+  StatusContext,
+  VerifyResponse,
+} from "../../lib/Types"
 
-    const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
+export default function FaucetRequestButton({
+  address,
+  amount,
+  disabled,
+  network,
+  profile,
+  status,
+}: {
+  address: string
+  amount: number
+  disabled: boolean
+  network: Network
+  profile: string
+  status: StatusContext
+}) {
+  const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
+  const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
-    const recaptchaRef: RefObject<ReCAPTCHA> = React.createRef();
+  const startLoading = () => {
+    status.setLoading(true)
+    setLocalLoading(true)
+    status.setStatus("")
+    status.setStatusType("")
+  }
 
-    const startLoading = () => {
-        status.setLoading(true);
-        setLocalLoading(true);
-        status.setStatus(null);
-        status.setStatusType(null);
+  const stopLoadingSuccess = (message: string) => {
+    status.setStatus(message)
+    status.setStatusType("success")
+    status.setLoading(false)
+    setLocalLoading(false)
+  }
+
+  const stopLoadingError = (message: string) => {
+    status.setStatus(message)
+    status.setStatusType("danger")
+    status.setLoading(false)
+    setLocalLoading(false)
+  }
+
+  // Ensure that `isLocalLoading` is false if user canceled pow worker.
+  // `status.isLoading` will be false.
+  useEffect(() => {
+    !status.isLoading && setLocalLoading(false)
+  }, [status.isLoading])
+
+  const execCaptcha = async () => {
+    const captchaToken: any = await recaptchaRef.current?.executeAsync()
+    recaptchaRef.current?.reset()
+    if (!captchaToken) {
+      stopLoadingError("Captcha error, please try again in a few minutes.")
+      return
     }
+    return captchaToken
+  }
 
-    const stopLoadingSuccess = (message: string) => {
-        status.setStatus(message);
-        status.setStatusType("success");
-        status.setLoading(false);
-        setLocalLoading(false);
-    }
+  const solvePow = async (
+    challenge: string,
+    difficulty: number,
+    challengeCounter: number
+  ) => {
+    status.setStatusType("info")
+    status.setStatus(`Solving PoW challenge #${challengeCounter}...`)
 
-    const stopLoadingError = (message: string) => {
-        status.setStatus(message);
-        status.setStatusType("danger");
-        status.setLoading(false);
-        setLocalLoading(false);
-    }
+    // There shouldn't be another worker running
+    if (status.powWorker) status.powWorker.terminate()
 
-    const send = async () => {
+    const powWorker = new PowWorker()
+    status.setPowWorker(powWorker)
+    powWorker.postMessage({ challenge, difficulty })
 
-        startLoading();
-
-        try {
-
-            const captchaToken: any = await recaptchaRef.current?.executeAsync();
-
-            if (!captchaToken) {
-                stopLoadingError("Captcha error, please try again in a few time.");
-                return;
-            }
-
-            const txBody: any = {
-                address: to,
-                captchaToken: captchaToken,
-                profile: profile
-            }
-
-            console.log(txBody);
-
-            axios.post(`${Config.application.backendUrl}/send`, txBody)
-                .then((response) => {
-                    if(response.status === 200) {
-                        console.log(response.data);
-                        const responseData: BackendResponse = response.data;
-                        const viewerUrl = `${network.viewer}/${responseData.txHash}`;
-                        stopLoadingSuccess(`Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`)
-                    }
-                    else {
-                        stopLoadingError(`Backend error`);
-                    }
-
-                })
-                .catch((error) => {
-                    if(error.response && (error.response.status === 500 || error.response.status === 400)) {
-                        console.log(error?.response?.data);
-                        const responseData: BackendResponse = error.response.data;
-                        stopLoadingError(`${responseData?.message}`);
-                    }
-                    else {
-                        console.log(error);
-                        stopLoadingError(`Backend error`);
-                    }
-                });
-        }
-        catch (err) {
-            console.log(err);
-            stopLoadingError("Forbidden");
-        }
-    }
-
-    return (
-        <>
-            <ReCAPTCHA
-                ref={recaptchaRef}
-                size="invisible"
-                sitekey={Config.application.googleCaptchaSiteKey}
-            />
-
-            <Button
-                variant="primary"
-                disabled={status.isLoading || !to}
-                onClick={send}
-            >
-                <DropletFill />&nbsp;
-                {isLocalLoading ? `Sending ${amount} ꜩ to ${minifyTezosAddress(to)}` : `Request ${amount} ꜩ`}
-
-                &nbsp; {isLocalLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : ""}
-            </Button>
-
-        </>
+    const powSolution: { solution: string; nonce: number } = await new Promise(
+      (resolve, reject) => {
+        powWorker.addEventListener("message", ({ data }) =>
+          data.message ? reject(data) : resolve(data)
+        )
+        powWorker.addEventListener("error", reject)
+      }
     )
-}
 
-export default FaucetRequestButton;
+    powWorker.terminate()
+    status.setPowWorker(null)
+    return powSolution
+  }
+
+  const getTez = async () => {
+    try {
+      if (Config.application.disableChallenges) {
+        startLoading()
+        return verifySolution({ solution: "", nonce: 0 })
+      }
+
+      let { challenge, difficulty, challengeCounter } = await getChallenge()
+      while (challenge && difficulty && challengeCounter) {
+        const powSolution = await solvePow(
+          challenge,
+          difficulty,
+          challengeCounter
+        )
+        const response = await verifySolution(powSolution)
+
+        challenge = response.challenge
+        difficulty = response.difficulty
+        challengeCounter = response.challengeCounter
+      }
+    } catch (err: any) {
+      stopLoadingError(err.message || "Error getting Tez")
+    }
+  }
+
+  const getChallenge = async (): Promise<Partial<Challenge>> => {
+    try {
+      const captchaToken = await execCaptcha()
+
+      startLoading()
+
+      const input = {
+        address,
+        captchaToken,
+        profile,
+      }
+
+      const { data }: { data: ChallengeResponse } = await axios.post(
+        `${Config.application.backendUrl}/challenge`,
+        input,
+        { timeout: 5000 }
+      )
+
+      if (data.challenge && data.difficulty && data.challengeCounter) {
+        return data
+      } else {
+        stopLoadingError(data?.message || "Error getting challenge")
+      }
+    } catch (err: any) {
+      stopLoadingError(err?.response?.data.message || "Error getting challenge")
+    }
+    return {}
+  }
+
+  const verifySolution = async ({
+    solution,
+    nonce,
+  }: {
+    solution: string
+    nonce: number
+  }): Promise<Partial<Challenge>> => {
+    const input = {
+      address,
+      profile,
+      nonce,
+      solution,
+    }
+
+    try {
+      const { data }: { data: VerifyResponse } = await axios.post(
+        `${Config.application.backendUrl}/verify`,
+        input,
+        { timeout: 5000 }
+      )
+
+      // If there is another challenge
+      if (data.challenge && data.difficulty && data.challengeCounter) {
+        return data
+      } else if (data.txHash) {
+        // All challenges were solved
+        const viewerUrl = `${network.viewer}/${data.txHash}`
+        stopLoadingSuccess(
+          `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
+        )
+      } else {
+        stopLoadingError("Error verifying solution")
+      }
+    } catch (err: any) {
+      stopLoadingError(
+        err?.response?.data.message || "Error verifying solution"
+      )
+    }
+    return {}
+  }
+
+  return (
+    <>
+      <ReCAPTCHA
+        ref={recaptchaRef}
+        size="invisible"
+        badge="bottomleft"
+        sitekey={Config.application.googleCaptchaSiteKey}
+      />
+
+      <Button variant="primary" disabled={disabled} onClick={getTez}>
+        <DropletFill />
+        &nbsp;
+        {isLocalLoading
+          ? `Sending ${amount} ꜩ to ${minifyTezosAddress(address)}`
+          : `Request ${amount} ꜩ`}
+        &nbsp;{" "}
+        {isLocalLoading ? (
+          <Spinner
+            as="span"
+            animation="border"
+            size="sm"
+            role="status"
+            aria-hidden="true"
+          />
+        ) : (
+          ""
+        )}
+      </Button>
+    </>
+  )
+}

@@ -1,0 +1,23 @@
+{
+    "application": {
+      "name": "Tezos Ghostnet Faucet",
+      "googleCaptchaSiteKey": "6LefC8QmAAAAAIXuoOhyI-FtALkYXZm4JK0GBYfb",
+      "backendUrl": "http://localhost:3000",
+      "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
+      "disableChallenges": false,
+      "profiles": {
+        "user": {
+          "amount": 1
+        },
+        "baker": {
+          "amount": 6000
+        }
+      }
+    },
+    "network": {
+      "name": "Ghostnet",
+      "rpcUrl": "http://localhost:8732",
+      "faucetAddress": "tz1PWgj8DP6dKCm6shSfhY3FnXP5kr3Y9CiD",
+      "viewer": "https://ghost.tzstats.com"
+    }
+}
