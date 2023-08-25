@@ -235,6 +235,7 @@ const getTez = async (args) => {
 }
 
 if (isMainModule) {
+  log("getTez.js by Oxhead Alpha - Get Free Tez\n")
   return getTez().then((txHash) => txHash && process.stdout.write(txHash))
 }
 
