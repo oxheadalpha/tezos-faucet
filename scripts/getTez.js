@@ -2,22 +2,37 @@
 const crypto = require("crypto")
 
 /*
-We use console.error for logging so that logs are not written to stdout when the
-script is run from the CLI. We want the transaction hash to be the only output
-once the Tez is sent to the user.
+We use instantiate a "Console" to stderr for logging so that logs are not
+written to stdout when the script is run from the CLI. We want the transaction
+hash to be the only stdout once the Tez is sent to the user.
 */
-const { error: log } = require("console")
-let VERBOSE = false
+const { Console } = require("console")
+const console = new Console(process.stderr)
+const { log } = console
+
+let VERBOSE, TIME
+
 const verboseLog = (message) => VERBOSE && log(message)
+
+const [time, timeLog, timeEnd] = [
+  console.time,
+  console.timeLog,
+  console.timeEnd,
+].map(
+  (f) =>
+    (...a) =>
+      TIME && f(...a)
+)
 
 const displayHelp = () => {
   log(`Usage: getTez.js [options] <address>
 Options:
   -h, --help                Display help information.
-  -p, --profile    <value>  Set the profile ('user' or 'baker').
+  -a, --amount    <value>   The amount of tez to request.
   -n, --network    <value>  Set the faucet's network name. See available networks at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
+  -t, --time                Enable PoW challenges timer.
   -v, --verbose             Enable verbose logging.`)
 }
 
@@ -36,7 +51,7 @@ const handleError = (message, help) => {
 }
 
 let address,
-  profile,
+  amount,
   network,
   faucetUrl = ""
 
@@ -57,9 +72,9 @@ const parseArgs = async (args) => {
         } else {
           throw new Error("'--help' passed")
         }
-      case "-p":
-      case "--profile":
-        profile = args.shift().toLowerCase()
+      case "-a":
+      case "--amount":
+        amount = Number(args.shift())
         break
       case "-n":
       case "--network":
@@ -73,6 +88,10 @@ const parseArgs = async (args) => {
       case "--verbose":
         VERBOSE = true
         break
+      case "-t":
+      case "--time":
+        TIME = true
+        break
       default:
         address = arg
         break
@@ -83,10 +102,8 @@ const parseArgs = async (args) => {
     handleError("Tezos address is required.", DISPLAY_HELP)
   }
 
-  if (!profile) {
-    handleError("Profile is required.", DISPLAY_HELP)
-  } else if (!["user", "baker"].includes(profile)) {
-    handleError("Invalid profile. Allowed values are 'user' or 'baker'.")
+  if (!amount) {
+    handleError("Amount is required.", DISPLAY_HELP)
   }
 
   if (!faucetUrl && !network) {
@@ -142,7 +159,7 @@ const getChallenge = async () => {
   const response = await fetch(`${faucetUrl}/challenge`, {
     method: "POST",
     headers: requestHeaders,
-    body: `address=${address}&profile=${profile}`,
+    body: `address=${address}&amount=${amount}`,
   })
 
   const body = await response.json()
@@ -164,10 +181,13 @@ const solvePow = (challenge, difficulty, challengeCounter) => {
   }
 
   let nonce = 0
+  time("solved")
   while (true) {
     const input = `${challenge}:${nonce}`
     const hash = crypto.createHash("sha256").update(input).digest("hex")
     if (hash.startsWith("0".repeat(difficulty))) {
+      timeEnd("solved")
+      timeLog("getTez total")
       verboseLog(`Solution found`)
       return { solution: hash, nonce }
     }
@@ -181,7 +201,7 @@ const verifySolution = async (solution, nonce) => {
   const response = await fetch(`${faucetUrl}/verify`, {
     method: "POST",
     headers: requestHeaders,
-    body: `address=${address}&profile=${profile}&nonce=${nonce}&solution=${solution}`,
+    body: `address=${address}&amount=${amount}&nonce=${nonce}&solution=${solution}`,
   })
 
   const { txHash, challenge, challengeCounter, difficulty, message } =
@@ -208,12 +228,13 @@ const getTez = async (args) => {
 
   const faucetInfo = await getInfo()
 
-  if (faucetInfo.challengesDisabled) {
+  if (!faucetInfo.challengesEnabled) {
     const txHash = (await verifySolution("", 0)).txHash
     return txHash
   }
 
   let { challenge, difficulty, challengeCounter } = await getChallenge()
+  time("getTez total")
 
   while (challenge && difficulty && challengeCounter) {
     verboseLog({ challenge, difficulty, challengeCounter })
@@ -230,7 +251,10 @@ const getTez = async (args) => {
     ;({ challenge, difficulty, challengeCounter, txHash } =
       await verifySolution(solution, nonce))
 
-    if (txHash) return txHash
+    if (txHash) {
+      timeEnd("getTez total")
+      return txHash
+    }
   }
 }
 
