@@ -1,7 +1,6 @@
 import { validateKeyHash } from "@taquito/utils"
 import { ChangeEvent, useState } from "react"
-import { Col, Form, Row } from "react-bootstrap"
-import { sortedProfiles } from "../../Config"
+import { Form } from "react-bootstrap"
 import { Network, StatusContext } from "../../lib/Types"
 import FaucetRequestButton from "./FaucetRequestButton"
 
@@ -34,32 +33,26 @@ export default function FaucetToInputRequest({
   return (
     <>
       <Form.Group className="faucet-address-to">
+        <Form.Label>Wallet Address</Form.Label>
         <Form.Control
           type="text"
-          placeholder="Wallet address"
+          placeholder="tz1..."
           id={inputId}
           onChange={handleInput}
           className={inputClass}
           disabled={status.isLoading}
         />
-        <Form.Control.Feedback type="invalid">
+        <Form.Control.Feedback type="invalid" className="position-absolute">
           Invalid address
         </Form.Control.Feedback>
       </Form.Group>
-      <Row>
-        {sortedProfiles.map(([profile, { amount }]) => (
-          <Col key={profile} lg={6}>
-            <FaucetRequestButton
-              address={inputToAddr}
-              amount={amount}
-              disabled={disableButton}
-              network={network}
-              profile={profile}
-              status={status}
-            />
-          </Col>
-        ))}
-      </Row>
+
+      <FaucetRequestButton
+        address={inputToAddr}
+        disabled={disableButton}
+        network={network}
+        status={status}
+      />
     </>
   )
 }

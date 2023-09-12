@@ -3,23 +3,15 @@ import { TezosToolkit } from "@taquito/taquito"
 import { BeaconWallet } from "@taquito/beacon-wallet"
 import { NetworkType } from "@airgap/beacon-sdk"
 
-type BackendProfile = {
-  amount: number
-}
-
-type Profiles = {
-  user: BackendProfile
-  baker: BackendProfile
-}
-
 type ApplicationConfig = {
   name: string
   googleCaptchaSiteKey: string
   isBeaconWallet?: boolean
   backendUrl: string
   githubRepo: string
-  profiles: Profiles
   disableChallenges?: boolean
+  minTez: number
+  maxTez: number
 }
 
 export type ConfigType = {

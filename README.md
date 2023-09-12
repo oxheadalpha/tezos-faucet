@@ -17,15 +17,13 @@ A one-click faucet for Tezos, now enhanced with a PoW (Proof of Work) challenge 
 
 The faucet's backend code can be located at [tezos-faucet-backend](https://github.com/oxheadalpha/tezos-faucet-backend). The backend handles the faucet's private key, CAPTCHA secret, PoW challenge creation and solution verification, and the amounts of Tez sent.
 
-Sent amounts and challenge details are configured via `profiles`. This enforces security, avoiding a user trying to change amounts in frontend javascript code and drying out the faucet. Two profiles are created by default: **user**, to get 1 xtz and **baker** to get 6000 xtz.
-
 ### Proof of Work (PoW) Challenge
 
 To mitigate potential abuse and ensure a fair distribution of Tez, users are now required to solve computational challenges before receiving their Tez. This PoW mechanism discourages bots and other malicious actors from exploiting the faucet.
 
 ### Application Flow
 
-1. **Initiating the Process**: Upon a Tez request, the frontend communicates with the `/challenge` endpoint of the backend, providing essential details such as the user's address and the profile type.
+1. **Initiating the Process**: Upon a Tez request, the frontend communicates with the `/challenge` endpoint of the backend, providing essential details such as the user's address and the amount of Tez requested.
 2. **Receiving and Solving the Challenge**: The backend then sends a challenge. The difficulty and amount of challenges to be solved depends on factors such as if a CAPTCHA token was submitted and how much Tez was requested. The browser will create a webworker which will begin the process of finding a solution.
 3. **Submitting and Verifying the Solution**: After solving, the frontend sends the solution to the `/verify` endpoint. The backend then checks its validity. Assuming it is valid, if more challenges are pending, the user proceeds to solve them. Once all challenges are cleared, Tez is sent to the user's account.
 
@@ -80,13 +78,9 @@ See https://github.com/oxheadalpha/tezos-faucet-backend
 
 - `disableChallenges`: If PoW challenges need to be solved before receiving Tez. The backend must also disable challenges. Defaults to `false`.
 
-- `profiles`: backend profiles, must match backend configuration.
-
-- - `user`: user profile, to get 1 XTZ
-
-- - `baker`: baker profile, to get 6000 XTZ
-
-- - - `amount`: amount given for the profile, for display only.
+- `minTez`: The minimum amount of Tez that can be requested.
+-
+- `maxTez`: The maximum amount of Tez that can be requested.
 
 **Network configuration:**
 

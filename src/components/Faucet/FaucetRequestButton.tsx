@@ -1,12 +1,11 @@
 import axios from "axios"
 import { RefObject, useEffect, useRef, useState } from "react"
-import { Button, Spinner } from "react-bootstrap"
+import { Button, Spinner, Form, Row, Col } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
-import PowWorker from "../../powWorker?worker"
 
+import PowWorker from "../../powWorker?worker"
 import Config from "../../Config"
-import { minifyTezosAddress } from "../../lib/Utils"
 import {
   Challenge,
   ChallengeResponse,
@@ -15,21 +14,20 @@ import {
   VerifyResponse,
 } from "../../lib/Types"
 
+const { minTez, maxTez } = Config.application
+
 export default function FaucetRequestButton({
   address,
-  amount,
   disabled,
   network,
-  profile,
   status,
 }: {
   address: string
-  amount: number
   disabled: boolean
   network: Network
-  profile: string
   status: StatusContext
 }) {
+  const [amount, setAmount] = useState<number>(minTez)
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
@@ -54,6 +52,12 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value)
+    if (value >= minTez && value <= maxTez) {
+      setAmount(value)
+    }
+  }
   // Ensure that `isLocalLoading` is false if user canceled pow worker.
   // `status.isLoading` will be false.
   useEffect(() => {
@@ -132,8 +136,8 @@ export default function FaucetRequestButton({
 
       const input = {
         address,
+        amount,
         captchaToken,
-        profile,
       }
 
       const { data }: { data: ChallengeResponse } = await axios.post(
@@ -162,7 +166,7 @@ export default function FaucetRequestButton({
   }): Promise<Partial<Challenge>> => {
     const input = {
       address,
-      profile,
+      amount,
       nonce,
       solution,
     }
@@ -203,25 +207,63 @@ export default function FaucetRequestButton({
         sitekey={Config.application.googleCaptchaSiteKey}
       />
 
-      <Button variant="primary" disabled={disabled} onClick={getTez}>
-        <DropletFill />
-        &nbsp;
-        {isLocalLoading
-          ? `Sending ${amount} ꜩ to ${minifyTezosAddress(address)}`
-          : `Request ${amount} ꜩ`}
-        &nbsp;{" "}
-        {isLocalLoading ? (
-          <Spinner
-            as="span"
-            animation="border"
-            size="sm"
-            role="status"
-            aria-hidden="true"
-          />
-        ) : (
-          ""
-        )}
-      </Button>
+      <Form.Group controlId="tezosRange" className="mt-5">
+        <Row className="d-flex align-items-end">
+          <Col md={8}>
+            <Form.Label>Select Tez Amount</Form.Label>
+            <Row>
+              <Col xs="auto" className="pe-0">
+                <Form.Label className="fw-bold">{minTez}</Form.Label>
+              </Col>
+
+              <Col>
+                <Form.Range
+                  min={minTez}
+                  max={maxTez}
+                  value={amount}
+                  disabled={disabled}
+                  onChange={updateAmount}
+                />
+              </Col>
+
+              <Col xs="auto" className="ps-0">
+                <Form.Label className="fw-bold">{maxTez}</Form.Label>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col xs={6} md={4}>
+            <Form.Control
+              type="number"
+              min={minTez}
+              max={maxTez}
+              value={amount}
+              disabled={disabled}
+              onChange={updateAmount}
+            />
+          </Col>
+
+          <Col xs={6}>
+            <Button variant="primary" disabled={disabled} onClick={getTez}>
+              <DropletFill />
+              &nbsp;
+              {isLocalLoading ? `Requested ${amount} ꜩ` : `Request ${amount} ꜩ`}
+              &nbsp;{" "}
+              {isLocalLoading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                ""
+              )}
+            </Button>
+          </Col>
+        </Row>
+      </Form.Group>
     </>
   )
 }

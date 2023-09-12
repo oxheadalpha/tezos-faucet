@@ -105,6 +105,22 @@ const config: ConfigType = configJson
     "tmpConfig.ts"
   )
 
+;["minTez", "maxTez"].forEach((str) => {
+  const numValue = Number(Config.application[str])
+  if (isNaN(numValue) || numValue <= 0) {
+    throw new Error(
+      `config.json is missing the application.${str} property or it's invalid. Please set application.${str} to a number greater than 0.`
+    )
+  }
+})
+
+if (Config.application.minTez > Config.application.maxTez) {
+  throw new Error(
+    `In config.json, application.minTez is greater than application.maxTez. Please ensure that minTez is less than or equal to maxTez.`
+  )
+}
+
+
 const networkKeys = Object.keys(NetworkType);
 
 const configNetwork = Config.network.name.toLowerCase();
