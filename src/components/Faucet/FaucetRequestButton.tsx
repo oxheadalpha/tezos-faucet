@@ -58,6 +58,7 @@ export default function FaucetRequestButton({
       setAmount(value)
     }
   }
+
   // Ensure that `isLocalLoading` is false if user canceled pow worker.
   // `status.isLoading` will be false.
   useEffect(() => {

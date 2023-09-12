@@ -1,34 +1,33 @@
-"use strict"
-const crypto = require("crypto")
+import crypto from "crypto"
 
 /*
 We use instantiate a "Console" to stderr for logging so that logs are not
 written to stdout when the script is run from the CLI. We want the transaction
 hash to be the only stdout once the Tez is sent to the user.
 */
-const { Console } = require("console")
+import { Console } from "console"
 const console = new Console(process.stderr)
 const { log } = console
 
-let VERBOSE, TIME
+let VERBOSE: boolean, TIME: boolean
 
-const verboseLog = (message) => VERBOSE && log(message)
+const verboseLog = (message: any) => VERBOSE && log(message)
 
 const [time, timeLog, timeEnd] = [
   console.time,
   console.timeLog,
   console.timeEnd,
 ].map(
-  (f) =>
-    (...a) =>
+  (f: Function) =>
+    (...a: any[]) =>
       TIME && f(...a)
 )
 
 const displayHelp = () => {
-  log(`Usage: getTez.js [options] <address>
+  log(`CLI Usage: getTez.js [options] <address>
 Options:
   -h, --help                Display help information.
-  -a, --amount    <value>   The amount of tez to request.
+  -a, --amount     <value>  The amount of tez to request.
   -n, --network    <value>  Set the faucet's network name. See available networks at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
@@ -39,9 +38,9 @@ Options:
 const isMainModule = require.main === module
 
 const DISPLAY_HELP = true
-const handleError = (message, help) => {
+const handleError = (message: string, help?: boolean) => {
   if (isMainModule) {
-    log(message)
+    log(message, "\n")
     help && displayHelp()
     process.exit(1)
   } else {
@@ -50,15 +49,34 @@ const handleError = (message, help) => {
   }
 }
 
-let address,
-  amount,
-  network,
-  faucetUrl = ""
+let address: string,
+  amount: number,
+  network: string,
+  faucetUrl: string = ""
 
-const parseArgs = async (args) => {
+type GetTezArgs = {
+  address: string
+  amount: number
+  network?: string
+  faucetUrl?: string
+  verbose?: boolean
+  time?: boolean
+}
+
+const parseArgs = async (args: string[] | string | GetTezArgs) => {
+  if (typeof args === "object" && !Array.isArray(args)) {
+    address = args.address || ""
+    amount = Number(args.amount)
+    network = args.network?.toLowerCase() || ""
+    faucetUrl = args.faucetUrl || ""
+    VERBOSE = args.verbose || false
+    TIME = args.time || false
+    return
+  }
+
   // If the file is executed directly by node and not via import then argv will
   // include the file name.
-  args = args || process.argv.slice(isMainModule ? 2 : 1)
+  // args = args || process.argv.slice(isMainModule ? 2 : 1)
   if (typeof args === "string") args = args.split(" ")
 
   while (args.length > 0) {
@@ -78,11 +96,11 @@ const parseArgs = async (args) => {
         break
       case "-n":
       case "--network":
-        network = args.shift().toLowerCase()
+        network = args.shift()?.toLowerCase() || ""
         break
       case "-f":
       case "--faucet-url":
-        faucetUrl = args.shift()
+        faucetUrl = args.shift() || ""
         break
       case "-v":
       case "--verbose":
@@ -93,7 +111,7 @@ const parseArgs = async (args) => {
         TIME = true
         break
       default:
-        address = arg
+        address = arg || ""
         break
     }
   }
@@ -118,7 +136,7 @@ const parseArgs = async (args) => {
       handleError(`Error fetching networks from ${teztnetsUrl}`)
     }
 
-    for (const net of Object.values(await response.json())) {
+    for (const net of Object.values(await response.json()) as any[]) {
       if (net.human_name.toLowerCase() === network) {
         faucetUrl = net.faucet_url
       }
@@ -171,7 +189,11 @@ const getChallenge = async () => {
   return body
 }
 
-const solvePow = (challenge, difficulty, challengeCounter) => {
+const solvePow = (
+  challenge: string,
+  difficulty: number,
+  challengeCounter: number
+) => {
   if (isMainModule && process.stdout.isTTY) {
     process.stderr.clearLine(0)
     process.stderr.cursorTo(0)
@@ -187,7 +209,7 @@ const solvePow = (challenge, difficulty, challengeCounter) => {
     const hash = crypto.createHash("sha256").update(input).digest("hex")
     if (hash.startsWith("0".repeat(difficulty))) {
       timeEnd("solved")
-      timeLog("getTez total")
+      timeLog("getTez time")
       verboseLog(`Solution found`)
       return { solution: hash, nonce }
     }
@@ -195,7 +217,15 @@ const solvePow = (challenge, difficulty, challengeCounter) => {
   }
 }
 
-const verifySolution = async (solution, nonce) => {
+const verifySolution = async (
+  solution: string,
+  nonce: number
+): Promise<{
+  challenge?: string
+  challengeCounter?: number
+  difficulty?: number
+  txHash?: string
+}> => {
   verboseLog("Verifying solution...")
 
   const response = await fetch(`${faucetUrl}/verify`, {
@@ -221,20 +251,21 @@ const verifySolution = async (solution, nonce) => {
   } else {
     handleError(`Error verifying solution: ${message}`)
   }
+  return {}
 }
 
-const getTez = async (args) => {
+const getTez = async (args: string[] | string | GetTezArgs) => {
   await parseArgs(args)
 
   const faucetInfo = await getInfo()
 
   if (!faucetInfo.challengesEnabled) {
-    const txHash = (await verifySolution("", 0)).txHash
+    const txHash = (await verifySolution("", 0))?.txHash
     return txHash
   }
 
   let { challenge, difficulty, challengeCounter } = await getChallenge()
-  time("getTez total")
+  time("getTez time")
 
   while (challenge && difficulty && challengeCounter) {
     verboseLog({ challenge, difficulty, challengeCounter })
@@ -252,7 +283,7 @@ const getTez = async (args) => {
       await verifySolution(solution, nonce))
 
     if (txHash) {
-      timeEnd("getTez total")
+      timeEnd("getTez time")
       return txHash
     }
   }
@@ -260,7 +291,10 @@ const getTez = async (args) => {
 
 if (isMainModule) {
   log("getTez.js by Oxhead Alpha - Get Free Tez\n")
-  return getTez().then((txHash) => txHash && process.stdout.write(txHash))
+  // If the file is executed directly by node and not via import then argv will
+  // include the file name.
+  const args = process.argv.slice(isMainModule ? 2 : 1)
+  getTez(args).then((txHash) => txHash && process.stdout.write(txHash))
 }
 
-module.exports = getTez
+export = getTez
