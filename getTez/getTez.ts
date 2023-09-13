@@ -24,7 +24,7 @@ const [time, timeLog, timeEnd] = [
 )
 
 const displayHelp = () => {
-  log(`CLI Usage: getTez.js [options] <address>
+  log(`CLI Usage: node getTez.js [options] <address>
 Options:
   -h, --help                Display help information.
   -a, --amount     <value>  The amount of tez to request.
@@ -37,7 +37,8 @@ Options:
 
 const isMainModule = require.main === module
 
-const DISPLAY_HELP = true
+const DISPLAY_HELP = isMainModule && true
+
 const handleError = (message: string, help?: boolean) => {
   if (isMainModule) {
     log(message, "\n")
@@ -49,11 +50,6 @@ const handleError = (message: string, help?: boolean) => {
   }
 }
 
-let address: string,
-  amount: number,
-  network: string,
-  faucetUrl: string = ""
-
 type GetTezArgs = {
   address: string
   amount: number
@@ -63,21 +59,15 @@ type GetTezArgs = {
   time?: boolean
 }
 
-const parseArgs = async (args: string[] | string | GetTezArgs) => {
-  if (typeof args === "object" && !Array.isArray(args)) {
-    address = args.address || ""
-    amount = Number(args.amount)
-    network = args.network?.toLowerCase() || ""
-    faucetUrl = args.faucetUrl || ""
-    VERBOSE = args.verbose || false
-    TIME = args.time || false
-    return
-  }
-
-  // If the file is executed directly by node and not via import then argv will
-  // include the file name.
-  // args = args || process.argv.slice(isMainModule ? 2 : 1)
+const parseCliArgs = (args: string | string[]) => {
   if (typeof args === "string") args = args.split(" ")
+
+  const parsedArgs: GetTezArgs = {
+    address: "",
+    amount: 0,
+    network: "",
+    faucetUrl: "",
+  }
 
   while (args.length > 0) {
     const arg = args.shift()
@@ -92,15 +82,15 @@ const parseArgs = async (args: string[] | string | GetTezArgs) => {
         }
       case "-a":
       case "--amount":
-        amount = Number(args.shift())
+        parsedArgs.amount = Number(args.shift())
         break
       case "-n":
       case "--network":
-        network = args.shift()?.toLowerCase() || ""
+        parsedArgs.network = args.shift()?.toLowerCase() || ""
         break
       case "-f":
       case "--faucet-url":
-        faucetUrl = args.shift() || ""
+        parsedArgs.faucetUrl = args.shift() || ""
         break
       case "-v":
       case "--verbose":
@@ -111,24 +101,30 @@ const parseArgs = async (args: string[] | string | GetTezArgs) => {
         TIME = true
         break
       default:
-        address = arg || ""
+        parsedArgs.address = arg || ""
         break
     }
   }
 
-  if (!address) {
+  return parsedArgs
+}
+
+type ValidatedArgs = Required<Omit<GetTezArgs, "verbose" | "time" | "network">>
+
+const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
+  if (!args.address) {
     handleError("Tezos address is required.", DISPLAY_HELP)
   }
 
-  if (!amount) {
-    handleError("Amount is required.", DISPLAY_HELP)
+  if (!args.amount || args.amount <= 0) {
+    handleError("Amount greater than 0 is required.", DISPLAY_HELP)
   }
 
-  if (!faucetUrl && !network) {
-    handleError("Either a network or faucet URL is required.", DISPLAY_HELP)
+  if (!args.faucetUrl && !args.network) {
+    handleError("Either a network name or faucet URL is required.", DISPLAY_HELP)
   }
 
-  if (!faucetUrl) {
+  if (!args.faucetUrl) {
     const teztnetsUrl = "https://teztnets.xyz/teztnets.json"
     const response = await fetch(teztnetsUrl)
 
@@ -136,16 +132,20 @@ const parseArgs = async (args: string[] | string | GetTezArgs) => {
       handleError(`Error fetching networks from ${teztnetsUrl}`)
     }
 
+    args.network = args.network?.toLowerCase()
+
     for (const net of Object.values(await response.json()) as any[]) {
-      if (net.human_name.toLowerCase() === network) {
-        faucetUrl = net.faucet_url
+      if (net.human_name.toLowerCase() === args.network) {
+        args.faucetUrl = net.faucet_url
       }
     }
 
-    if (!faucetUrl) {
+    if (!args.faucetUrl) {
       handleError("Network not found or not supported.")
     }
   }
+
+  return args as ValidatedArgs
 }
 
 const requestHeaders = {
@@ -155,7 +155,7 @@ const requestHeaders = {
   "Content-Type": "application/x-www-form-urlencoded",
 }
 
-const getInfo = async () => {
+const getInfo = async (faucetUrl: string) => {
   verboseLog("Requesting faucet info...")
 
   const response = await fetch(`${faucetUrl}/info`, {
@@ -171,7 +171,7 @@ const getInfo = async () => {
   return body
 }
 
-const getChallenge = async () => {
+const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   verboseLog("Requesting PoW challenge...")
 
   const response = await fetch(`${faucetUrl}/challenge`, {
@@ -217,10 +217,16 @@ const solvePow = (
   }
 }
 
-const verifySolution = async (
-  solution: string,
+const verifySolution = async ({
+  address,
+  amount,
+  faucetUrl,
+  nonce,
+  solution,
+}: {
   nonce: number
-): Promise<{
+  solution: string
+} & ValidatedArgs): Promise<{
   challenge?: string
   challengeCounter?: number
   difficulty?: number
@@ -254,17 +260,21 @@ const verifySolution = async (
   return {}
 }
 
-const getTez = async (args: string[] | string | GetTezArgs) => {
-  await parseArgs(args)
+const getTez = async (args: GetTezArgs) => {
+  const validatedArgs = await validateArgs(args)
 
-  const faucetInfo = await getInfo()
+  const faucetInfo = await getInfo(validatedArgs.faucetUrl)
 
   if (!faucetInfo.challengesEnabled) {
-    const txHash = (await verifySolution("", 0))?.txHash
+    const txHash = (
+      await verifySolution({ solution: "", nonce: 0, ...validatedArgs })
+    )?.txHash
     return txHash
   }
 
-  let { challenge, difficulty, challengeCounter } = await getChallenge()
+  let { challenge, difficulty, challengeCounter } = await getChallenge(
+    validatedArgs
+  )
   time("getTez time")
 
   while (challenge && difficulty && challengeCounter) {
@@ -280,7 +290,7 @@ const getTez = async (args: string[] | string | GetTezArgs) => {
 
     let txHash
     ;({ challenge, difficulty, challengeCounter, txHash } =
-      await verifySolution(solution, nonce))
+      await verifySolution({ solution, nonce, ...validatedArgs }))
 
     if (txHash) {
       timeEnd("getTez time")
@@ -294,7 +304,8 @@ if (isMainModule) {
   // If the file is executed directly by node and not via import then argv will
   // include the file name.
   const args = process.argv.slice(isMainModule ? 2 : 1)
-  getTez(args).then((txHash) => txHash && process.stdout.write(txHash))
+  const parsedArgs = parseCliArgs(args)
+  getTez(parsedArgs).then((txHash) => txHash && process.stdout.write(txHash))
 }
 
 export = getTez
