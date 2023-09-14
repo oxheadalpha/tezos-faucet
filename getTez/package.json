@@ -2,7 +2,6 @@
   "name": "get-tez",
   "version": "1.0.0",
   "description": "Programmatic script to get Tezos from faucet",
-  "type": "module",
   "main": "dist/getTez.js",
   "types": "dist/getTez.d.ts",
   "scripts": {

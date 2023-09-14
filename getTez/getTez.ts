@@ -29,8 +29,9 @@ const displayHelp = () => {
   log(`CLI Usage: node getTez.js [options] <address>
 Options:
   -h, --help                Display help information.
-  -a, --amount     <value>  The amount of tez to request.
-  -n, --network    <value>  Set the faucet's network name. See available networks at https://teztnets.xyz.
+  -a, --amount     <value>  The amount of Tez to request.
+  -n, --network    <value>  Set the faucet's network name. Must match a
+                            network name with a faucet listed at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
   -t, --time                Enable PoW challenges timer.
@@ -51,11 +52,18 @@ const handleError = (message: string, help?: boolean) => {
 }
 
 type GetTezArgs = {
+  /** The address to send Tez to. */
   address: string
+  /** The amount of Tez to request. */
   amount: number
+  /** Set the faucet's network name. Must match a network name with a faucet
+   * listed at https://teztnets.xyz. Ignored if `faucetUrl` is set. */
   network?: string
+  /** Set the custom faucet URL. Ignores `network`. */
   faucetUrl?: string
+  /** Enable verbose logging. */
   verbose?: boolean
+  /** Enable PoW challenges timer */
   time?: boolean
 }
 
@@ -147,6 +155,9 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
       handleError("Network not found or not supported.")
     }
   }
+
+  if (args.verbose) VERBOSE = true
+  if (args.time) TIME = true
 
   return args as ValidatedArgs
 }
@@ -289,9 +300,15 @@ const verifySolution = async ({
 const getTez = async (args: GetTezArgs) => {
   const validatedArgs = await validateArgs(args)
 
-  const faucetInfo = await getInfo(validatedArgs.faucetUrl)
+  const { challengesEnabled, minTez, maxTez } = await getInfo(
+    validatedArgs.faucetUrl
+  )
 
-  if (!faucetInfo.challengesEnabled) {
+  if (!(args.amount >= minTez && args.amount <= maxTez)) {
+    throw new Error(`Amount must be between ${minTez} and ${maxTez} tez.`)
+  }
+
+  if (!challengesEnabled) {
     const txHash = (
       await verifySolution({ solution: "", nonce: 0, ...validatedArgs })
     )?.txHash
