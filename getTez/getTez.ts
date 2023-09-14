@@ -1,4 +1,6 @@
-import crypto from "crypto"
+import * as crypto from "crypto"
+
+const isMainModule = require.main === module
 
 /*
 We use instantiate a "Console" to stderr for logging so that logs are not
@@ -6,7 +8,7 @@ written to stdout when the script is run from the CLI. We want the transaction
 hash to be the only stdout once the Tez is sent to the user.
 */
 import { Console } from "console"
-const console = new Console(process.stderr)
+const console = new Console(isMainModule ? process.stderr : process.stdout)
 const { log } = console
 
 let VERBOSE: boolean, TIME: boolean
@@ -34,8 +36,6 @@ Options:
   -t, --time                Enable PoW challenges timer.
   -v, --verbose             Enable verbose logging.`)
 }
-
-const isMainModule = require.main === module
 
 const DISPLAY_HELP = isMainModule && true
 
@@ -117,11 +117,14 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
   }
 
   if (!args.amount || args.amount <= 0) {
-    handleError("Amount greater than 0 is required.", DISPLAY_HELP)
+    handleError("An amount greater than 0 is required.", DISPLAY_HELP)
   }
 
   if (!args.faucetUrl && !args.network) {
-    handleError("Either a network name or faucet URL is required.", DISPLAY_HELP)
+    handleError(
+      "Either a network name or faucet URL is required.",
+      DISPLAY_HELP
+    )
   }
 
   if (!args.faucetUrl) {
@@ -155,6 +158,8 @@ const requestHeaders = {
   "Content-Type": "application/x-www-form-urlencoded",
 }
 
+/* Get Info */
+
 const getInfo = async (faucetUrl: string) => {
   verboseLog("Requesting faucet info...")
 
@@ -170,6 +175,8 @@ const getInfo = async (faucetUrl: string) => {
 
   return body
 }
+
+/* Get Challenge */
 
 const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   verboseLog("Requesting PoW challenge...")
@@ -189,12 +196,26 @@ const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   return body
 }
 
-const solvePow = (
-  challenge: string,
-  difficulty: number,
+/* Solve Challenge */
+
+type SolveChallengeArgs = {
+  challenge: string
+  difficulty: number
   challengeCounter: number
-) => {
+}
+
+type Solution = {
+  nonce: number
+  solution: string
+}
+
+const solveChallenge = ({
+  challenge,
+  difficulty,
+  challengeCounter,
+}: SolveChallengeArgs): Solution => {
   if (isMainModule && process.stdout.isTTY) {
+    // Overwrite the same line instead of printing multiple lines.
     process.stderr.clearLine(0)
     process.stderr.cursorTo(0)
     process.stderr.write(`Solving challenge #${challengeCounter}... `)
@@ -217,21 +238,24 @@ const solvePow = (
   }
 }
 
+/* Verify Solution */
+
+type VerifySolutionArgs = Solution & ValidatedArgs
+
+type VerifySolutionResult = {
+  challenge?: string
+  challengeCounter?: number
+  difficulty?: number
+  txHash?: string
+}
+
 const verifySolution = async ({
   address,
   amount,
   faucetUrl,
   nonce,
   solution,
-}: {
-  nonce: number
-  solution: string
-} & ValidatedArgs): Promise<{
-  challenge?: string
-  challengeCounter?: number
-  difficulty?: number
-  txHash?: string
-}> => {
+}: VerifySolutionArgs): Promise<VerifySolutionResult> => {
   verboseLog("Verifying solution...")
 
   const response = await fetch(`${faucetUrl}/verify`, {
@@ -260,6 +284,8 @@ const verifySolution = async ({
   return {}
 }
 
+/* Entrypoint */
+
 const getTez = async (args: GetTezArgs) => {
   const validatedArgs = await validateArgs(args)
 
@@ -280,11 +306,11 @@ const getTez = async (args: GetTezArgs) => {
   while (challenge && difficulty && challengeCounter) {
     verboseLog({ challenge, difficulty, challengeCounter })
 
-    const { solution, nonce } = solvePow(
+    const { solution, nonce } = solveChallenge({
       challenge,
       difficulty,
-      challengeCounter
-    )
+      challengeCounter,
+    })
 
     verboseLog({ nonce, solution })
 
@@ -308,4 +334,6 @@ if (isMainModule) {
   getTez(parsedArgs).then((txHash) => txHash && process.stdout.write(txHash))
 }
 
+// https://remarkablemark.org/blog/2020/05/05/typescript-export-commonjs-es6-modules
+getTez.default = getTez
 export = getTez
