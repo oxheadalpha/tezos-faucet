@@ -74,7 +74,7 @@ function SplittedWallet({ user, testnetContext, network }: { user: UserContext, 
     };
 
     return (
-        <Card>
+        <Card className="mt-5">
             <Card.Header>My wallet</Card.Header>
             <Card.Body>
                 {(user.userAddress != null && user.userAddress !== "") &&

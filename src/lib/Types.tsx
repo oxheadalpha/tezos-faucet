@@ -23,6 +23,7 @@ export type Challenge = {
   challenge: string
   difficulty: number
   challengeCounter: number
+  challengesNeeded: number
 }
 
 export type ChallengeResponse = Partial<Challenge> & {

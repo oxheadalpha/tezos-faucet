@@ -59,6 +59,11 @@ export default function FaucetRequestButton({
     }
   }
 
+  const getProgress = (challengeCounter: number, challengesNeeded: number) =>
+    String(
+      Math.min(100, Math.floor((challengeCounter / challengesNeeded) * 100))
+    )
+
   // Ensure that `isLocalLoading` is false if user canceled pow worker.
   // `status.isLoading` will be false.
   useEffect(() => {
@@ -75,16 +80,17 @@ export default function FaucetRequestButton({
     return captchaToken
   }
 
-  const solvePow = async (
-    challenge: string,
-    difficulty: number,
-    challengeCounter: number
-  ) => {
-    status.setStatusType("info")
-    status.setStatus(`Solving PoW challenge #${challengeCounter}...`)
-
+  const solvePow = async ({
+    challenge,
+    difficulty,
+    challengeCounter,
+    challengesNeeded,
+  }: Challenge) => {
     // There shouldn't be another worker running
     if (status.powWorker) status.powWorker.terminate()
+
+    status.setStatusType("solving")
+    status.setStatus(getProgress(challengeCounter - 1, challengesNeeded))
 
     const powWorker = new PowWorker()
     status.setPowWorker(powWorker)
@@ -99,6 +105,8 @@ export default function FaucetRequestButton({
       }
     )
 
+    status.setStatus(getProgress(challengeCounter, challengesNeeded))
+
     powWorker.terminate()
     status.setPowWorker(null)
     return powSolution
@@ -111,18 +119,22 @@ export default function FaucetRequestButton({
         return verifySolution({ solution: "", nonce: 0 })
       }
 
-      let { challenge, difficulty, challengeCounter } = await getChallenge()
-      while (challenge && difficulty && challengeCounter) {
-        const powSolution = await solvePow(
+      let { challenge, difficulty, challengeCounter, challengesNeeded } =
+        await getChallenge()
+
+      while (challenge && difficulty && challengeCounter && challengesNeeded) {
+        const powSolution = await solvePow({
           challenge,
           difficulty,
-          challengeCounter
-        )
-        const response = await verifySolution(powSolution)
+          challengeCounter,
+          challengesNeeded,
+        })
 
+        const response = await verifySolution(powSolution)
         challenge = response.challenge
         difficulty = response.difficulty
         challengeCounter = response.challengeCounter
+        challengesNeeded = response.challengesNeeded
       }
     } catch (err: any) {
       stopLoadingError(err.message || "Error getting Tez")
@@ -184,7 +196,12 @@ export default function FaucetRequestButton({
         return data
       } else if (data.txHash) {
         // All challenges were solved
+
+        // Let the progress bar briefly show 100% before it goes away
+        await new Promise((res) => setTimeout(res, 800))
+
         const viewerUrl = `${network.viewer}/${data.txHash}`
+
         stopLoadingSuccess(
           `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
