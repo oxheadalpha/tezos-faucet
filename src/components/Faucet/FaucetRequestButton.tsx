@@ -225,7 +225,7 @@ export default function FaucetRequestButton({
         sitekey={Config.application.googleCaptchaSiteKey}
       />
 
-      <Form.Group controlId="tezosRange" className="mt-5">
+      <Form.Group controlId="tezosRange" className="mt-md-5">
         <Row className="d-flex align-items-end">
           <Col md={8}>
             <Form.Label>Select Tez Amount</Form.Label>

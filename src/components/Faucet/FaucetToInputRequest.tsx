@@ -33,7 +33,6 @@ export default function FaucetToInputRequest({
   return (
     <>
       <Form.Group className="faucet-address-to">
-        <Form.Label>Wallet Address</Form.Label>
         <Form.Control
           type="text"
           placeholder="tz1..."
