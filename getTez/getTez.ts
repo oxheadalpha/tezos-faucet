@@ -42,7 +42,7 @@ const DISPLAY_HELP = isMainModule && true
 
 const handleError = (message: string, help?: boolean) => {
   if (isMainModule) {
-    log(message, "\n")
+    log(`ERROR: ${message}`, "\n")
     help && displayHelp()
     process.exit(1)
   } else {
@@ -181,7 +181,7 @@ const getInfo = async (faucetUrl: string) => {
   const body = await response.json()
 
   if (!response.ok) {
-    handleError(`ERROR: ${body.message}`)
+    handleError(body.message)
   }
 
   return body
@@ -201,7 +201,7 @@ const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   const body = await response.json()
 
   if (!response.ok) {
-    handleError(`ERROR: ${body.message}`)
+    handleError(body.message)
   }
 
   return body
@@ -279,7 +279,7 @@ const verifySolution = async ({
     await response.json()
 
   if (!response.ok) {
-    handleError(`ERROR: ${message}`)
+    handleError(message)
   }
 
   if (txHash) {
@@ -305,7 +305,7 @@ const getTez = async (args: GetTezArgs) => {
   )
 
   if (!(args.amount >= minTez && args.amount <= maxTez)) {
-    throw new Error(`Amount must be between ${minTez} and ${maxTez} tez.`)
+    handleError(`Amount must be between ${minTez} and ${maxTez} tez.`)
   }
 
   if (!challengesEnabled) {
