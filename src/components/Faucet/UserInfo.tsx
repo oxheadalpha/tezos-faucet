@@ -12,8 +12,11 @@ function UserInfo({
   displayBalance: boolean
 }) {
   return (
-    <div className="faucet-part-user">
-      <Card bg="light" text="dark" className="d-inline-block mw-100">
+      <Card
+        bg="light"
+        text="dark"
+        className="d-inline-block mw-100"
+      >
         <Card.Body className="d-flex align-items-center p-1">
           <Wallet2 className="me-2" size={24} />
           <span className="text-truncate fw-bold">
@@ -26,7 +29,6 @@ function UserInfo({
           )}
         </Card.Body>
       </Card>
-    </div>
   )
 }
 

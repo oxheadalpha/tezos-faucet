@@ -64,7 +64,7 @@ export default function SplittedFaucet({
   }, [statusType, showInfo])
 
   return (
-    <Card className="mt-5">
+    <Card className="mt-3">
       <Card.Header>
         <Card.Title>{network.name} Faucet</Card.Title>
       </Card.Header>
@@ -89,10 +89,8 @@ export default function SplittedFaucet({
           </Col>
         </Row>
 
-        <br />
-
         {showPowProgress && (
-          <Card>
+          <Card className="mt-4">
             <Card.Body>
               <Card.Subtitle>Solving Challenges...</Card.Subtitle>
               <div className="d-flex align-items-center">
