@@ -8,7 +8,7 @@ function minifyTezosAddress(address: string): string {
 }
 
 function splitNumber(x: number) {
-  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
 function roundBalance(balance: number): number {

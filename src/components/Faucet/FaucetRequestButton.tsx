@@ -209,9 +209,7 @@ export default function FaucetRequestButton({
         stopLoadingError("Error verifying solution")
       }
     } catch (err: any) {
-      stopLoadingError(
-        err?.response?.data.message || "Error verifying solution"
-      )
+      stopLoadingError(err?.response?.data.message || err.message)
     }
     return {}
   }

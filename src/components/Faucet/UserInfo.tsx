@@ -12,23 +12,19 @@ function UserInfo({
   displayBalance: boolean
 }) {
   return (
-      <Card
-        bg="light"
-        text="dark"
-        className="d-inline-block mw-100"
-      >
-        <Card.Body className="d-flex align-items-center p-1">
-          <Wallet2 className="me-2" size={24} />
-          <span className="text-truncate fw-bold">
-            {user.userAddress || "Not connected"}
-          </span>
-          {displayBalance && (
-            <Badge bg="secondary" className="ms-2 balance-badge">
-              {toBalance(user.userBalance)} ꜩ
-            </Badge>
-          )}
-        </Card.Body>
-      </Card>
+    <Card bg="light" text="dark" className="d-inline-block mw-100">
+      <Card.Body className="d-flex align-items-center p-1">
+        <Wallet2 size={20} />
+        <span className="text-truncate fw-bold ms-2 me-2">
+          {user.userAddress || "Not connected"}
+        </span>
+        {displayBalance && (
+          <Badge bg="secondary" className="balance-badge">
+            {toBalance(user.userBalance)} ꜩ
+          </Badge>
+        )}
+      </Card.Body>
+    </Card>
   )
 }
 

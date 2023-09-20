@@ -47,10 +47,10 @@ function App() {
 
       <Container>
         <Row className="d-flex gy-3 align-items-center">
-          <Col className="d-flex justify-content-center">
+          <Col sm={5} className="d-flex justify-content-center">
             <img src="faucet-logo.png" alt="Faucet logo" />
           </Col>
-          <Col>
+          <Col sm={7}>
             <SplittedWallet
               user={user}
               network={network}
