@@ -80,20 +80,13 @@ export default function FaucetRequestButton({
     return captchaToken
   }
 
-  const solvePow = async ({
-    challenge,
-    difficulty,
-    challengeCounter,
-    challengesNeeded,
-  }: Challenge) => {
-    // There shouldn't be another worker running
-    if (status.powWorker) status.powWorker.terminate()
-
+  const solvePow = async (
+    { challenge, difficulty, challengeCounter, challengesNeeded }: Challenge,
+    powWorker: Worker
+  ) => {
     status.setStatusType("solving")
     status.setStatus(getProgress(challengeCounter - 1, challengesNeeded))
 
-    const powWorker = new PowWorker()
-    status.setPowWorker(powWorker)
     powWorker.postMessage({ challenge, difficulty })
 
     const powSolution: { solution: string; nonce: number } = await new Promise(
@@ -107,8 +100,6 @@ export default function FaucetRequestButton({
 
     status.setStatus(getProgress(challengeCounter, challengesNeeded))
 
-    powWorker.terminate()
-    status.setPowWorker(null)
     return powSolution
   }
 
@@ -122,19 +113,30 @@ export default function FaucetRequestButton({
       let { challenge, difficulty, challengeCounter, challengesNeeded } =
         await getChallenge()
 
-      while (challenge && difficulty && challengeCounter && challengesNeeded) {
-        const powSolution = await solvePow({
-          challenge,
-          difficulty,
-          challengeCounter,
-          challengesNeeded,
-        })
+      const powWorker = new PowWorker()
+      status.setPowWorker(powWorker)
 
-        const response = await verifySolution(powSolution)
-        challenge = response.challenge
-        difficulty = response.difficulty
-        challengeCounter = response.challengeCounter
-        challengesNeeded = response.challengesNeeded
+      try {
+        while (
+          challenge &&
+          difficulty &&
+          challengeCounter &&
+          challengesNeeded
+        ) {
+          const powSolution = await solvePow(
+            { challenge, difficulty, challengeCounter, challengesNeeded },
+            powWorker
+          )
+
+          const response = await verifySolution(powSolution)
+          challenge = response.challenge
+          difficulty = response.difficulty
+          challengeCounter = response.challengeCounter
+          challengesNeeded = response.challengesNeeded
+        }
+      } finally {
+        powWorker.terminate()
+        status.setPowWorker(null)
       }
     } catch (err: any) {
       stopLoadingError(err.message || "Error getting Tez")
