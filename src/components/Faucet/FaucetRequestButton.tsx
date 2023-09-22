@@ -4,7 +4,7 @@ import { Button, Spinner, Form, Row, Col } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
 
-import PowWorker from "../../powWorker?worker"
+import PowWorker from "../../powWorker?worker&inline"
 import Config from "../../Config"
 import {
   Challenge,
