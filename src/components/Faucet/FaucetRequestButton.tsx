@@ -61,7 +61,7 @@ export default function FaucetRequestButton({
 
   const getProgress = (challengeCounter: number, challengesNeeded: number) =>
     String(
-      Math.min(100, Math.floor((challengeCounter / challengesNeeded) * 100))
+      Math.min(99, Math.floor((challengeCounter / challengesNeeded) * 100))
     )
 
   // Ensure that `isLocalLoading` is false if user canceled pow worker.

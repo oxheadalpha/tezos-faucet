@@ -213,6 +213,7 @@ type SolveChallengeArgs = {
   challenge: string
   difficulty: number
   challengeCounter: number
+  challengesNeeded: number
 }
 
 type Solution = {
@@ -224,14 +225,20 @@ const solveChallenge = ({
   challenge,
   difficulty,
   challengeCounter,
+  challengesNeeded,
 }: SolveChallengeArgs): Solution => {
+  const progress = Math.min(
+    99,
+    Number((((challengeCounter - 1) / challengesNeeded) * 100).toFixed(1))
+  )
+
   if (isMainModule && process.stdout.isTTY) {
     // Overwrite the same line instead of printing multiple lines.
     process.stderr.clearLine(0)
     process.stderr.cursorTo(0)
-    process.stderr.write(`Solving challenge #${challengeCounter}... `)
+    process.stderr.write(`Solving challenges... ${progress}% `)
   } else {
-    verboseLog(`Solving challenge #${challengeCounter}...`)
+    verboseLog(`Solving challenges... ${progress}%`)
   }
 
   let nonce = 0
@@ -315,18 +322,19 @@ const getTez = async (args: GetTezArgs) => {
     return txHash
   }
 
-  let { challenge, difficulty, challengeCounter } = await getChallenge(
-    validatedArgs
-  )
+  let { challenge, difficulty, challengeCounter, challengesNeeded } =
+    await getChallenge(validatedArgs)
+
   time("getTez time")
 
-  while (challenge && difficulty && challengeCounter) {
+  while (challenge && difficulty && challengeCounter && challengesNeeded) {
     verboseLog({ challenge, difficulty, challengeCounter })
 
     const { solution, nonce } = solveChallenge({
       challenge,
       difficulty,
       challengeCounter,
+      challengesNeeded,
     })
 
     verboseLog({ nonce, solution })
@@ -348,7 +356,9 @@ if (isMainModule) {
   // include the file name.
   const args = process.argv.slice(isMainModule ? 2 : 1)
   const parsedArgs = parseCliArgs(args)
-  getTez(parsedArgs).then((txHash) => txHash && process.stdout.write(txHash))
+  getTez(parsedArgs).then(
+    (txHash) => txHash && process.stdout.write("\n" + txHash)
+  )
 }
 
 // https://remarkablemark.org/blog/2020/05/05/typescript-export-commonjs-es6-modules
