@@ -87,16 +87,16 @@ export default function FaucetRequestButton({
     status.setStatusType("solving")
     status.setStatus(getProgress(challengeCounter - 1, challengesNeeded))
 
+    const powSolution: Promise<{ solution: string; nonce: number }> =
+      new Promise((resolve, reject) => {
+        powWorker.onerror = (e) => reject(e)
+        powWorker.onmessage = ({ data }) =>
+          data.message ? reject(data) : resolve(data)
+      })
+
     powWorker.postMessage({ challenge, difficulty })
 
-    const powSolution: { solution: string; nonce: number } = await new Promise(
-      (resolve, reject) => {
-        powWorker.addEventListener("message", ({ data }) =>
-          data.message ? reject(data) : resolve(data)
-        )
-        powWorker.addEventListener("error", reject)
-      }
-    )
+    await powSolution
 
     status.setStatus(getProgress(challengeCounter, challengesNeeded))
 
