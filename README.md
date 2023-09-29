@@ -79,7 +79,6 @@ See https://github.com/oxheadalpha/tezos-faucet-backend
 - `disableChallenges`: If PoW challenges need to be solved before receiving Tez. The backend must also disable challenges. Defaults to `false`.
 
 - `minTez`: The minimum amount of Tez that can be requested.
--
 - `maxTez`: The maximum amount of Tez that can be requested.
 
 **Network configuration:**
