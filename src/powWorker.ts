@@ -11,6 +11,10 @@ const sha256 = async (input: string) => {
 self.addEventListener("message", async ({ data }) => {
   try {
     const { challenge, difficulty } = data
+    if (!challenge || !difficulty) {
+      throw new Error("No challenge or difficulty provided")
+    }
+
     let nonce = 0
     let solution = ""
 

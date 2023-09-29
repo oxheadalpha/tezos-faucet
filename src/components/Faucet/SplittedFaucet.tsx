@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { TezosToolkit } from "@taquito/taquito"
-import { Alert, Card, Col, Row, Button, Spinner } from "react-bootstrap"
+import { Alert, Card, Col, Row, Button, ProgressBar } from "react-bootstrap"
 import Parser from "html-react-parser"
 import FaucetToWalletRequest from "./FaucetToWalletRequest"
 import FaucetToInputRequest from "./FaucetToInputRequest"
@@ -24,10 +24,13 @@ export default function SplittedFaucet({
   const [statusType, setStatusType] = useState<string>("")
   const [showPowProgress, setShowPowProgress] = useState(false)
   const [powWorker, setPowWorker] = useState<Worker | null>(null)
-  const [showAlert, setShowAlert] = useState(
-    localStorage.getItem("showAlert") !== "false"
+  const [showInfo, setShowInfo] = useState(
+    localStorage.getItem("showInfo") !== "false"
   )
 
+  const unsetStatus = () => (setStatus(""), setStatusType(""))
+
+  const progress = showPowProgress ? Math.ceil(Number(status)) : 0
   const statusContext: StatusContext = {
     isLoading,
     setLoading,
@@ -56,80 +59,86 @@ export default function SplittedFaucet({
   }, [isLoading])
 
   useEffect(() => {
-    if (statusType && statusType !== "") setShowPowProgress(true)
-    if (!showAlert) setShowAlert(false)
-  }, [statusType, showAlert])
+    setShowPowProgress(!!(statusType && statusType === "solving"))
+    if (!showInfo) setShowInfo(false)
+  }, [statusType, showInfo])
 
   return (
-    <Card>
+    <Card className="mt-3">
       <Card.Header>
         <Card.Title>{network.name} Faucet</Card.Title>
       </Card.Header>
 
       <Card.Body>
-        <Row>
-          <Col className="faucet-part-title">Fund your web wallet</Col>
-          <Col className="faucet-part-title">Or fund any address</Col>
-        </Row>
-        <Row>
-          <Col className="faucet-part">
+        <Row className="gy-2">
+          <Col md={6} className="faucet-part">
+            <Card.Text className="faucet-part-title">
+              Fund your web wallet
+            </Card.Text>
             <FaucetToWalletRequest
               network={network}
               user={user}
               status={statusContext}
             />
           </Col>
-          <Col className="faucet-part">
+          <Col md={6} className="faucet-part">
+            <Card.Text className="faucet-part-title">
+              Fund any address
+            </Card.Text>
             <FaucetToInputRequest network={network} status={statusContext} />
           </Col>
         </Row>
-        <Row>
-          <Col>
-            <br />
-            {showPowProgress && status && (
-              <Alert
-                variant={statusType}
-                onClose={() => setShowPowProgress(false)}
-                dismissible={!isLoading}
-              >
-                <div className="d-flex justify-content-between align-items-center">
-                  <div className="d-inline-block">
-                    {Parser(status)}
-                    {isLoading && <Spinner size="sm" className="ms-1" />}
-                  </div>
-                  {isLoading && (
-                    <div>
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          if (powWorker) {
-                            powWorker.terminate()
-                            setPowWorker(null)
-                            setLoading(false)
-                            setShowPowProgress(false)
-                          }
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </Alert>
-            )}
-          </Col>
-        </Row>
+
+        {showPowProgress && (
+          <Card className="mt-4">
+            <Card.Body>
+              <Card.Subtitle>Solving Challenges...</Card.Subtitle>
+              <div className="d-flex align-items-center">
+                <ProgressBar
+                  animated
+                  className="flex-fill"
+                  now={Math.max(progress, 10)}
+                  label={`${progress}%`}
+                />
+
+                {isLoading && (
+                  <Button
+                    className="ms-3"
+                    variant="secondary"
+                    onClick={() => {
+                      if (powWorker) {
+                        powWorker.terminate()
+                        setPowWorker(null)
+                        setLoading(false)
+                        unsetStatus()
+                        setShowPowProgress(false)
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </Card.Body>
+          </Card>
+        )}
+
+        {!showPowProgress && status && statusType && (
+          <Alert dismissible variant={statusType} onClose={unsetStatus}>
+            <div className="d-inline-block">{Parser(status)}</div>
+          </Alert>
+        )}
 
         {!Config.application.disableChallenges && (
           <>
             <hr />
             <div className="d-flex justify-content-end">
-              {!showAlert && (
+              {!showInfo && (
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    setShowAlert(true)
-                    localStorage.setItem("showAlert", "true")
+                    setShowInfo(true)
+                    localStorage.setItem("showInfo", "true")
                   }}
                 >
                   Show Info
@@ -137,7 +146,7 @@ export default function SplittedFaucet({
               )}
             </div>
 
-            <Alert show={showAlert} variant="secondary" className="mt-3">
+            <Alert show={showInfo} variant="secondary" className="mt-3">
               <p>
                 To ensure fair distribution of Tez, we've introduced proof of
                 work challenges. Before you receive your Tez, your browser will
@@ -164,8 +173,8 @@ export default function SplittedFaucet({
                 <Button
                   variant="outline-secondary"
                   onClick={() => {
-                    setShowAlert(false)
-                    localStorage.setItem("showAlert", "false")
+                    setShowInfo(false)
+                    localStorage.setItem("showInfo", "false")
                   }}
                 >
                   Hide

@@ -33,8 +33,4 @@ Config.application.isBeaconWallet = !!Config.network.networkType
 Config.application.disableChallenges =
   Config.application.disableChallenges === true
 
-export const sortedProfiles = Object.entries(Config.application.profiles).sort(
-  ([, profileA], [, profileB]) => profileA.amount - profileB.amount
-)
-
 export default Config

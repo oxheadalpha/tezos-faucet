@@ -1,68 +1,70 @@
-import { useEffect, useState } from "react";
-import { Row, Col, Container } from 'react-bootstrap';
-import { TezosToolkit } from "@taquito/taquito";
-import './App.css';
+import { useEffect, useState } from "react"
+import { Row, Col, Container } from "react-bootstrap"
+import { TezosToolkit } from "@taquito/taquito"
+import "./App.css"
 //import AppLogo from "../public/faucet-logo.png";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import SplittedFaucet from "./components/Faucet/SplittedFaucet";
-import SplittedWallet from "./components/Wallet/SplittedWallet";
-import { Network, TestnetContext, UserContext } from "./lib/Types";
-import Config from "./Config";
+import Header from "./components/Header"
+import Footer from "./components/Footer"
+import SplittedFaucet from "./components/Faucet/SplittedFaucet"
+import SplittedWallet from "./components/Wallet/SplittedWallet"
+import { Network, TestnetContext, UserContext } from "./lib/Types"
+import Config from "./Config"
 
 function App() {
-
   // Common user data
-  const [userAddress, setUserAddress] = useState<string>("");
-  const [userBalance, setUserBalance] = useState<number>(0);
+  const [userAddress, setUserAddress] = useState<string>("")
+  const [userBalance, setUserBalance] = useState<number>(0)
 
   // network data
-  const [network, setNetwork] = useState<Network>(Config.network);
-  const [Tezos, setTezos] = useState<TezosToolkit>(new TezosToolkit(network.rpcUrl));
-  const [wallet, setWallet] = useState<any>(null);
+  const [network, setNetwork] = useState<Network>(Config.network)
+  const [Tezos, setTezos] = useState<TezosToolkit>(
+    new TezosToolkit(network.rpcUrl)
+  )
+  const [wallet, setWallet] = useState<any>(null)
 
-  let user: UserContext = { userAddress, setUserAddress, userBalance, setUserBalance };
+  const user: UserContext = {
+    userAddress,
+    setUserAddress,
+    userBalance,
+    setUserBalance,
+  }
 
   let testnet: TestnetContext = {
     network,
     wallet,
     setWallet,
     Tezos,
-    setTezos
+    setTezos,
   }
 
   useEffect(() => {
-    console.log(`Loading ${Config.network.name}`);
-  }, []);
+    console.log(`Loading ${Config.network.name}`)
+  }, [])
 
   return (
     <>
       <Header />
 
       <Container>
-
-        <Row>
-          <Col md={4}>
-            <img src="faucet-logo.png" alt="Faucet logo"/>
+        <Row className="d-flex gy-3 align-items-center">
+          <Col sm={5} className="d-flex justify-content-center">
+            <img src="faucet-logo.png" alt="Faucet logo" />
           </Col>
-          <Col md={8}>
-            <SplittedWallet user={user} network={network} testnetContext={testnet} />
-          </Col>
-        </Row>
-
-        <Row>
-          <Col>
-            <SplittedFaucet network={network} user={user} Tezos={Tezos} />
+          <Col sm={7}>
+            <SplittedWallet
+              user={user}
+              network={network}
+              testnetContext={testnet}
+            />
           </Col>
         </Row>
 
+        <SplittedFaucet network={network} user={user} Tezos={Tezos} />
       </Container>
 
       <Footer />
-
     </>
-  );
+  )
 }
-
 
 export default App

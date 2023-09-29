@@ -1,0 +1,40 @@
+{
+  "name": "@oxheadalpha/get-tez",
+  "version": "1.0.0",
+  "description": "Programmatic script to get Tezos from faucet",
+  "main": "dist/getTez.js",
+  "types": "dist/getTez.d.ts",
+  "files": [
+    "dist",
+    "package.json",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./dist/getTez.js",
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oxheadalpha/tezos-faucet/tree/main/getTez"
+  },
+  "keywords": [
+    "tezos",
+    "blockchain",
+    "faucet",
+    "ghostnet",
+    "mondaynet",
+    "dailynet"
+  ],
+  "author": "Aryeh Harris",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "typescript": "^5.2.2"
+  }
+}

@@ -1,12 +1,11 @@
 import axios from "axios"
 import { RefObject, useEffect, useRef, useState } from "react"
-import { Button, Spinner } from "react-bootstrap"
+import { Button, Spinner, Form, Row, Col } from "react-bootstrap"
 import { DropletFill } from "react-bootstrap-icons"
 import ReCAPTCHA from "react-google-recaptcha"
-import PowWorker from "../../powWorker?worker"
 
+import PowWorker from "../../powWorker?worker&inline"
 import Config from "../../Config"
-import { minifyTezosAddress } from "../../lib/Utils"
 import {
   Challenge,
   ChallengeResponse,
@@ -15,21 +14,20 @@ import {
   VerifyResponse,
 } from "../../lib/Types"
 
+const { minTez, maxTez } = Config.application
+
 export default function FaucetRequestButton({
   address,
-  amount,
   disabled,
   network,
-  profile,
   status,
 }: {
   address: string
-  amount: number
   disabled: boolean
   network: Network
-  profile: string
   status: StatusContext
 }) {
+  const [amount, setAmount] = useState<number>(minTez)
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
@@ -54,6 +52,18 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value)
+    if (value >= minTez && value <= maxTez) {
+      setAmount(value)
+    }
+  }
+
+  const getProgress = (challengeCounter: number, challengesNeeded: number) =>
+    String(
+      Math.min(99, Math.floor((challengeCounter / challengesNeeded) * 100))
+    )
+
   // Ensure that `isLocalLoading` is false if user canceled pow worker.
   // `status.isLoading` will be false.
   useEffect(() => {
@@ -71,31 +81,25 @@ export default function FaucetRequestButton({
   }
 
   const solvePow = async (
-    challenge: string,
-    difficulty: number,
-    challengeCounter: number
+    { challenge, difficulty, challengeCounter, challengesNeeded }: Challenge,
+    powWorker: Worker
   ) => {
-    status.setStatusType("info")
-    status.setStatus(`Solving PoW challenge #${challengeCounter}...`)
+    status.setStatusType("solving")
+    status.setStatus(getProgress(challengeCounter - 1, challengesNeeded))
 
-    // There shouldn't be another worker running
-    if (status.powWorker) status.powWorker.terminate()
+    const powSolution: Promise<{ solution: string; nonce: number }> =
+      new Promise((resolve, reject) => {
+        powWorker.onerror = (e) => reject(e)
+        powWorker.onmessage = ({ data }) =>
+          data.message ? reject(data) : resolve(data)
+      })
 
-    const powWorker = new PowWorker()
-    status.setPowWorker(powWorker)
     powWorker.postMessage({ challenge, difficulty })
 
-    const powSolution: { solution: string; nonce: number } = await new Promise(
-      (resolve, reject) => {
-        powWorker.addEventListener("message", ({ data }) =>
-          data.message ? reject(data) : resolve(data)
-        )
-        powWorker.addEventListener("error", reject)
-      }
-    )
+    await powSolution
 
-    powWorker.terminate()
-    status.setPowWorker(null)
+    status.setStatus(getProgress(challengeCounter, challengesNeeded))
+
     return powSolution
   }
 
@@ -106,18 +110,33 @@ export default function FaucetRequestButton({
         return verifySolution({ solution: "", nonce: 0 })
       }
 
-      let { challenge, difficulty, challengeCounter } = await getChallenge()
-      while (challenge && difficulty && challengeCounter) {
-        const powSolution = await solvePow(
-          challenge,
-          difficulty,
-          challengeCounter
-        )
-        const response = await verifySolution(powSolution)
+      let { challenge, difficulty, challengeCounter, challengesNeeded } =
+        await getChallenge()
 
-        challenge = response.challenge
-        difficulty = response.difficulty
-        challengeCounter = response.challengeCounter
+      const powWorker = new PowWorker()
+      status.setPowWorker(powWorker)
+
+      try {
+        while (
+          challenge &&
+          difficulty &&
+          challengeCounter &&
+          challengesNeeded
+        ) {
+          const powSolution = await solvePow(
+            { challenge, difficulty, challengeCounter, challengesNeeded },
+            powWorker
+          )
+
+          const response = await verifySolution(powSolution)
+          challenge = response.challenge
+          difficulty = response.difficulty
+          challengeCounter = response.challengeCounter
+          challengesNeeded = response.challengesNeeded
+        }
+      } finally {
+        powWorker.terminate()
+        status.setPowWorker(null)
       }
     } catch (err: any) {
       stopLoadingError(err.message || "Error getting Tez")
@@ -132,8 +151,8 @@ export default function FaucetRequestButton({
 
       const input = {
         address,
+        amount,
         captchaToken,
-        profile,
       }
 
       const { data }: { data: ChallengeResponse } = await axios.post(
@@ -162,7 +181,7 @@ export default function FaucetRequestButton({
   }): Promise<Partial<Challenge>> => {
     const input = {
       address,
-      profile,
+      amount,
       nonce,
       solution,
     }
@@ -179,7 +198,12 @@ export default function FaucetRequestButton({
         return data
       } else if (data.txHash) {
         // All challenges were solved
+
+        // Let the progress bar briefly show 100% before it goes away
+        await new Promise((res) => setTimeout(res, 800))
+
         const viewerUrl = `${network.viewer}/${data.txHash}`
+
         stopLoadingSuccess(
           `Your ꜩ is on the way! <a target="_blank" href="${viewerUrl}" class="alert-link">Check it.</a>`
         )
@@ -187,9 +211,7 @@ export default function FaucetRequestButton({
         stopLoadingError("Error verifying solution")
       }
     } catch (err: any) {
-      stopLoadingError(
-        err?.response?.data.message || "Error verifying solution"
-      )
+      stopLoadingError(err?.response?.data.message || err.message)
     }
     return {}
   }
@@ -203,25 +225,63 @@ export default function FaucetRequestButton({
         sitekey={Config.application.googleCaptchaSiteKey}
       />
 
-      <Button variant="primary" disabled={disabled} onClick={getTez}>
-        <DropletFill />
-        &nbsp;
-        {isLocalLoading
-          ? `Sending ${amount} ꜩ to ${minifyTezosAddress(address)}`
-          : `Request ${amount} ꜩ`}
-        &nbsp;{" "}
-        {isLocalLoading ? (
-          <Spinner
-            as="span"
-            animation="border"
-            size="sm"
-            role="status"
-            aria-hidden="true"
-          />
-        ) : (
-          ""
-        )}
-      </Button>
+      <Form.Group controlId="tezosRange" className="mt-4">
+        <Row className="d-flex align-items-end">
+          <Col md={8}>
+            <Form.Label>Select Tez Amount</Form.Label>
+            <Row>
+              <Col xs="auto" className="pe-0">
+                <Form.Label className="fw-bold">{minTez}</Form.Label>
+              </Col>
+
+              <Col>
+                <Form.Range
+                  min={minTez}
+                  max={maxTez}
+                  value={amount}
+                  disabled={disabled}
+                  onChange={updateAmount}
+                />
+              </Col>
+
+              <Col xs="auto" className="ps-0">
+                <Form.Label className="fw-bold">{maxTez}</Form.Label>
+              </Col>
+            </Row>
+          </Col>
+
+          <Col xs={6} md={4}>
+            <Form.Control
+              type="number"
+              min={minTez}
+              max={maxTez}
+              value={amount}
+              disabled={disabled}
+              onChange={updateAmount}
+            />
+          </Col>
+
+          <Col xs={6}>
+            <Button variant="primary" disabled={disabled} onClick={getTez}>
+              <DropletFill />
+              &nbsp;
+              {isLocalLoading ? `Requested ${amount} ꜩ` : `Request ${amount} ꜩ`}
+              &nbsp;{" "}
+              {isLocalLoading ? (
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+              ) : (
+                ""
+              )}
+            </Button>
+          </Col>
+        </Row>
+      </Form.Group>
     </>
   )
 }

@@ -5,14 +5,8 @@
       "backendUrl": "http://localhost:3000",
       "githubRepo": "https://github.com/oxheadalpha/tezos-faucet",
       "disableChallenges": false,
-      "profiles": {
-        "user": {
-          "amount": 1
-        },
-        "baker": {
-          "amount": 6000
-        }
-      }
+      "minTez": 1,
+      "maxTez": 6000
     },
     "network": {
       "name": "Ghostnet",
