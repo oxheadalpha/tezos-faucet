@@ -29,9 +29,9 @@ To mitigate potential abuse and ensure a fair distribution of Tez, users are now
 
 ## Programmatic Faucet Usage
 
-We provide a [`getTez.js`](./scripts/getTez.js) script for programmatic faucet usage. This script can be run from a JavaScript program or directly from a shell.
+For programmatic usage of the faucet, we provide an npm package `@oxheadalpha/get-tez`. The code can be found [here](https://github.com/oxheadalpha/tezos-faucet/tree/main/getTez). Please refer to it for more details on how to use it. This script can be run from a JavaScript program or directly from a shell. It interacts with the backend to request Tez, solve the required challenges, and verify the solutions.
 
-Please note that the `getTez.js` script does not use CAPTCHA. Therefore, challenges can be configured to make them more difficult and require more of them to be solved when using the programmatic faucet.
+Please note that the programmatic faucet code does not use CAPTCHA and so more challenges can be given when using it.
 
 ## Setup
 
