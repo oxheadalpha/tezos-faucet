@@ -226,31 +226,29 @@ export default function FaucetRequestButton({
       />
 
       <Form.Group controlId="tezosRange" className="mt-4">
-        <Row className="d-flex align-items-end">
-          <Col md={8}>
-            <Form.Label>Select Tez Amount</Form.Label>
-            <Row>
-              <Col xs="auto" className="pe-0">
-                <Form.Label className="fw-bold">{minTez}</Form.Label>
-              </Col>
-
-              <Col>
-                <Form.Range
-                  min={minTez}
-                  max={maxTez}
-                  value={amount}
-                  disabled={disabled}
-                  onChange={updateAmount}
-                />
-              </Col>
-
-              <Col xs="auto" className="ps-0">
-                <Form.Label className="fw-bold">{maxTez}</Form.Label>
-              </Col>
-            </Row>
+        <Form.Label>Select Tez Amount</Form.Label>
+        <Row className="mb-2">
+          <Col xs="auto" className="pe-0">
+            <Form.Label className="fw-bold">{minTez}</Form.Label>
           </Col>
 
-          <Col xs={6} md={4}>
+          <Col>
+            <Form.Range
+              min={minTez}
+              max={maxTez}
+              value={amount}
+              disabled={disabled}
+              onChange={updateAmount}
+            />
+          </Col>
+
+          <Col xs="auto" className="ps-0">
+            <Form.Label className="fw-bold">{maxTez}</Form.Label>
+          </Col>
+        </Row>
+
+        <Row className="d-flex align-items-end gy-3">
+          <Col xs={12} sm={6}>
             <Form.Control
               type="number"
               min={minTez}
@@ -258,11 +256,11 @@ export default function FaucetRequestButton({
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
-              onFocus={e => e.target.select()}
+              onFocus={(e) => e.target.select()}
             />
           </Col>
 
-          <Col xs={6}>
+          <Col xs={12} sm={6} className="d-flex justify-content-sm-end">
             <Button variant="primary" disabled={disabled} onClick={getTez}>
               <DropletFill />
               &nbsp;
