@@ -28,6 +28,7 @@ export default function FaucetRequestButton({
   status: StatusContext
 }) {
   const [amount, setAmount] = useState<number>(minTez)
+  const formattedAmount = amount.toLocaleString()
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
@@ -229,7 +230,7 @@ export default function FaucetRequestButton({
         <Form.Label>Select Tez Amount</Form.Label>
         <Row className="mb-2">
           <Col xs="auto" className="pe-0">
-            <Form.Label className="fw-bold">{minTez}</Form.Label>
+            <Form.Label className="fw-bold">{minTez.toLocaleString()}</Form.Label>
           </Col>
 
           <Col>
@@ -243,7 +244,7 @@ export default function FaucetRequestButton({
           </Col>
 
           <Col xs="auto" className="ps-0">
-            <Form.Label className="fw-bold">{maxTez}</Form.Label>
+            <Form.Label className="fw-bold">{maxTez.toLocaleString()}</Form.Label>
           </Col>
         </Row>
 
@@ -264,7 +265,9 @@ export default function FaucetRequestButton({
             <Button variant="primary" disabled={disabled} onClick={getTez}>
               <DropletFill />
               &nbsp;
-              {isLocalLoading ? `Requested ${amount} ꜩ` : `Request ${amount} ꜩ`}
+              {isLocalLoading
+                ? `Requested ${formattedAmount} ꜩ`
+                : `Request ${formattedAmount} ꜩ`}
               &nbsp;{" "}
               {isLocalLoading ? (
                 <Spinner
