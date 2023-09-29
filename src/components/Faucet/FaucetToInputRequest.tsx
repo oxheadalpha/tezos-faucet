@@ -37,9 +37,10 @@ export default function FaucetToInputRequest({
           type="text"
           placeholder="tz1..."
           id={inputId}
-          onChange={handleInput}
           className={inputClass}
           disabled={status.isLoading}
+          onChange={handleInput}
+          onFocus={(e) => e.target.select()}
         />
         <Form.Control.Feedback type="invalid" className="position-absolute">
           Invalid address

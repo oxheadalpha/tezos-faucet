@@ -28,6 +28,7 @@ export default function FaucetRequestButton({
   status: StatusContext
 }) {
   const [amount, setAmount] = useState<number>(minTez)
+  const formattedAmount = amount.toLocaleString()
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
@@ -216,6 +217,29 @@ export default function FaucetRequestButton({
     return {}
   }
 
+  const computeStep = () => {
+    const magnitude = Math.floor(Math.log10(maxTez))
+
+    switch (magnitude) {
+      case 1:
+      case 2:
+        return 1
+      case 3:
+        return 10
+      case 4:
+        return 100
+      case 5:
+        return 1_000
+      case 6:
+        return 10_000
+      default:
+        return 100_000
+    }
+  }
+
+  const currentStep = computeStep()
+  const adjustedMin = Math.ceil(minTez / currentStep) * currentStep
+
   return (
     <>
       <ReCAPTCHA
@@ -226,31 +250,34 @@ export default function FaucetRequestButton({
       />
 
       <Form.Group controlId="tezosRange" className="mt-4">
-        <Row className="d-flex align-items-end">
-          <Col md={8}>
-            <Form.Label>Select Tez Amount</Form.Label>
-            <Row>
-              <Col xs="auto" className="pe-0">
-                <Form.Label className="fw-bold">{minTez}</Form.Label>
-              </Col>
-
-              <Col>
-                <Form.Range
-                  min={minTez}
-                  max={maxTez}
-                  value={amount}
-                  disabled={disabled}
-                  onChange={updateAmount}
-                />
-              </Col>
-
-              <Col xs="auto" className="ps-0">
-                <Form.Label className="fw-bold">{maxTez}</Form.Label>
-              </Col>
-            </Row>
+        <Form.Label>Select Tez Amount</Form.Label>
+        <Row className="mb-2">
+          <Col xs="auto" className="pe-0">
+            <Form.Label className="fw-bold">
+              {minTez.toLocaleString()}
+            </Form.Label>
           </Col>
 
-          <Col xs={6} md={4}>
+          <Col>
+            <Form.Range
+              min={adjustedMin}
+              max={maxTez}
+              step={currentStep}
+              value={amount}
+              disabled={disabled}
+              onChange={updateAmount}
+            />
+          </Col>
+
+          <Col xs="auto" className="ps-0">
+            <Form.Label className="fw-bold">
+              {maxTez.toLocaleString()}
+            </Form.Label>
+          </Col>
+        </Row>
+
+        <Row className="d-flex align-items-end gy-3">
+          <Col xs={12} sm={6}>
             <Form.Control
               type="number"
               min={minTez}
@@ -258,14 +285,17 @@ export default function FaucetRequestButton({
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
+              onFocus={(e) => e.target.select()}
             />
           </Col>
 
-          <Col xs={6}>
+          <Col xs={12} sm={6} className="d-flex justify-content-sm-end">
             <Button variant="primary" disabled={disabled} onClick={getTez}>
               <DropletFill />
               &nbsp;
-              {isLocalLoading ? `Requested ${amount} ꜩ` : `Request ${amount} ꜩ`}
+              {isLocalLoading
+                ? `Requested ${formattedAmount} ꜩ`
+                : `Request ${formattedAmount} ꜩ`}
               &nbsp;{" "}
               {isLocalLoading ? (
                 <Spinner
