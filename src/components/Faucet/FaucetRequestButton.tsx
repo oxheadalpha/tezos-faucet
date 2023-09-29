@@ -217,6 +217,29 @@ export default function FaucetRequestButton({
     return {}
   }
 
+  const computeStep = () => {
+    const magnitude = Math.floor(Math.log10(maxTez))
+
+    switch (magnitude) {
+      case 1:
+      case 2:
+        return 1
+      case 3:
+        return 10
+      case 4:
+        return 100
+      case 5:
+        return 1_000
+      case 6:
+        return 10_000
+      default:
+        return 100_000
+    }
+  }
+
+  const currentStep = computeStep()
+  const adjustedMin = Math.ceil(minTez / currentStep) * currentStep
+
   return (
     <>
       <ReCAPTCHA
@@ -230,13 +253,16 @@ export default function FaucetRequestButton({
         <Form.Label>Select Tez Amount</Form.Label>
         <Row className="mb-2">
           <Col xs="auto" className="pe-0">
-            <Form.Label className="fw-bold">{minTez.toLocaleString()}</Form.Label>
+            <Form.Label className="fw-bold">
+              {minTez.toLocaleString()}
+            </Form.Label>
           </Col>
 
           <Col>
             <Form.Range
-              min={minTez}
+              min={adjustedMin}
               max={maxTez}
+              step={currentStep}
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
@@ -244,7 +270,9 @@ export default function FaucetRequestButton({
           </Col>
 
           <Col xs="auto" className="ps-0">
-            <Form.Label className="fw-bold">{maxTez.toLocaleString()}</Form.Label>
+            <Form.Label className="fw-bold">
+              {maxTez.toLocaleString()}
+            </Form.Label>
           </Col>
         </Row>
 
