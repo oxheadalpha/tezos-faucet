@@ -258,6 +258,7 @@ export default function FaucetRequestButton({
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
+              onFocus={e => e.target.select()}
             />
           </Col>
 
