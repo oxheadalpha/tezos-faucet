@@ -6,6 +6,7 @@ import ReCAPTCHA from "react-google-recaptcha"
 
 import PowWorker from "../../powWorker?worker&inline"
 import Config from "../../Config"
+import { autoSelectInputText } from "../../lib/Utils"
 import {
   Challenge,
   ChallengeResponse,
@@ -31,6 +32,12 @@ export default function FaucetRequestButton({
   const formattedAmount = amount.toLocaleString()
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
+
+  // Ensure that `isLocalLoading` is false if user canceled pow worker.
+  // `status.isLoading` will be false.
+  useEffect(() => {
+    !status.isLoading && setLocalLoading(false)
+  }, [status.isLoading])
 
   const startLoading = () => {
     status.setLoading(true)
@@ -64,12 +71,6 @@ export default function FaucetRequestButton({
     String(
       Math.min(99, Math.floor((challengeCounter / challengesNeeded) * 100))
     )
-
-  // Ensure that `isLocalLoading` is false if user canceled pow worker.
-  // `status.isLoading` will be false.
-  useEffect(() => {
-    !status.isLoading && setLocalLoading(false)
-  }, [status.isLoading])
 
   const execCaptcha = async () => {
     const captchaToken: any = await recaptchaRef.current?.executeAsync()
@@ -285,7 +286,7 @@ export default function FaucetRequestButton({
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
-              onFocus={(e) => e.target.select()}
+              onClick={autoSelectInputText}
             />
           </Col>
 

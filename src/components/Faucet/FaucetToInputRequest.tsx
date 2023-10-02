@@ -1,8 +1,10 @@
 import { validateKeyHash } from "@taquito/utils"
 import { ChangeEvent, useState } from "react"
 import { Form } from "react-bootstrap"
-import { Network, StatusContext } from "../../lib/Types"
+import { autoSelectInputText } from "../../lib/Utils"
 import FaucetRequestButton from "./FaucetRequestButton"
+
+import { Network, StatusContext } from "../../lib/Types"
 
 export default function FaucetToInputRequest({
   network,
@@ -40,7 +42,7 @@ export default function FaucetToInputRequest({
           className={inputClass}
           disabled={status.isLoading}
           onChange={handleInput}
-          onFocus={(e) => e.target.select()}
+          onClick={autoSelectInputText}
         />
         <Form.Control.Feedback type="invalid" className="position-absolute">
           Invalid address
