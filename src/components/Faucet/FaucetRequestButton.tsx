@@ -17,6 +17,11 @@ import {
 
 const { minTez, maxTez } = Config.application
 
+const formatAmount = (amount: number) =>
+  amount.toLocaleString(undefined, {
+    maximumFractionDigits: 5,
+  })
+
 export default function FaucetRequestButton({
   address,
   disabled,
@@ -29,7 +34,8 @@ export default function FaucetRequestButton({
   status: StatusContext
 }) {
   const [amount, setAmount] = useState<number>(minTez)
-  const formattedAmount = amount.toLocaleString()
+  const formattedAmount = formatAmount(amount)
+
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
 
@@ -66,6 +72,14 @@ export default function FaucetRequestButton({
       setAmount(value)
     }
   }
+
+  const validateChallenge = (data: Partial<Challenge>): data is Challenge =>
+    !!(
+      data.challenge &&
+      data.difficulty &&
+      data.challengeCounter &&
+      data.challengesNeeded
+    )
 
   const getProgress = (challengeCounter: number, challengesNeeded: number) =>
     String(
@@ -112,29 +126,17 @@ export default function FaucetRequestButton({
         return verifySolution({ solution: "", nonce: 0 })
       }
 
-      let { challenge, difficulty, challengeCounter, challengesNeeded } =
-        await getChallenge()
+      let challengeRes = await getChallenge()
 
       const powWorker = new PowWorker()
       status.setPowWorker(powWorker)
 
       try {
-        while (
-          challenge &&
-          difficulty &&
-          challengeCounter &&
-          challengesNeeded
-        ) {
-          const powSolution = await solvePow(
-            { challenge, difficulty, challengeCounter, challengesNeeded },
-            powWorker
-          )
+        while (validateChallenge(challengeRes)) {
+          const powSolution = await solvePow(challengeRes, powWorker)
 
-          const response = await verifySolution(powSolution)
-          challenge = response.challenge
-          difficulty = response.difficulty
-          challengeCounter = response.challengeCounter
-          challengesNeeded = response.challengesNeeded
+          const newChallengeRes = await verifySolution(powSolution)
+          challengeRes = newChallengeRes
         }
       } finally {
         powWorker.terminate()
@@ -163,7 +165,7 @@ export default function FaucetRequestButton({
         { timeout: 5000 }
       )
 
-      if (data.challenge && data.difficulty && data.challengeCounter) {
+      if (validateChallenge(data)) {
         return data
       } else {
         stopLoadingError(data?.message || "Error getting challenge")
@@ -196,7 +198,7 @@ export default function FaucetRequestButton({
       )
 
       // If there is another challenge
-      if (data.challenge && data.difficulty && data.challengeCounter) {
+      if (validateChallenge(data)) {
         return data
       } else if (data.txHash) {
         // All challenges were solved
@@ -254,9 +256,7 @@ export default function FaucetRequestButton({
         <Form.Label>Select Tez Amount</Form.Label>
         <Row className="mb-2">
           <Col xs="auto" className="pe-0">
-            <Form.Label className="fw-bold">
-              {minTez.toLocaleString()}
-            </Form.Label>
+            <Form.Label className="fw-bold">{formatAmount(minTez)}</Form.Label>
           </Col>
 
           <Col>
@@ -271,9 +271,7 @@ export default function FaucetRequestButton({
           </Col>
 
           <Col xs="auto" className="ps-0">
-            <Form.Label className="fw-bold">
-              {maxTez.toLocaleString()}
-            </Form.Label>
+            <Form.Label className="fw-bold">{formatAmount(maxTez)}</Form.Label>
           </Col>
         </Row>
 
