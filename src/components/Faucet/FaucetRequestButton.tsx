@@ -16,6 +16,19 @@ import {
 } from "../../lib/Types"
 
 const { minTez, maxTez } = Config.application
+// Compute the step for the Tezos amount range slider.
+const tezRangeStep = (() => {
+  const magnitude = Math.floor(Math.log10(maxTez))
+
+  // When maxTez is greater than 1
+  if (maxTez > 1) {
+    return Math.max(0.5, Math.pow(10, magnitude - 2))
+  }
+
+  // When maxTez is less than or equal to 1 and minTez is fractional
+  const minMagnitude = Math.abs(Math.floor(Math.log10(minTez)))
+  return Math.max(0.001, 1 / Math.pow(10, minMagnitude))
+})()
 
 const formatAmount = (amount: number) =>
   amount.toLocaleString(undefined, {
@@ -220,29 +233,6 @@ export default function FaucetRequestButton({
     return {}
   }
 
-  const computeStep = () => {
-    const magnitude = Math.floor(Math.log10(maxTez))
-
-    switch (magnitude) {
-      case 1:
-      case 2:
-        return 1
-      case 3:
-        return 10
-      case 4:
-        return 100
-      case 5:
-        return 1_000
-      case 6:
-        return 10_000
-      default:
-        return 100_000
-    }
-  }
-
-  const currentStep = computeStep()
-  const adjustedMin = Math.ceil(minTez / currentStep) * currentStep
-
   return (
     <>
       <ReCAPTCHA
@@ -261,9 +251,9 @@ export default function FaucetRequestButton({
 
           <Col>
             <Form.Range
-              min={adjustedMin}
+              min={tezRangeStep}
               max={maxTez}
-              step={currentStep}
+              step={tezRangeStep}
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
