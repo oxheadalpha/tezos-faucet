@@ -80,7 +80,7 @@ export default function FaucetRequestButton({
   }
 
   const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value)
+    const value = Number(e.target.value.slice(0, 16))
     if (value >= minTez && value <= maxTez) {
       setAmount(value)
     }
