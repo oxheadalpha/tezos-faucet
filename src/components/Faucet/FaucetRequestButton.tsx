@@ -233,6 +233,8 @@ export default function FaucetRequestButton({
     return {}
   }
 
+  const step = amount === tezRangeStep ? minTez : tezRangeStep
+
   return (
     <>
       <ReCAPTCHA
@@ -251,9 +253,9 @@ export default function FaucetRequestButton({
 
           <Col>
             <Form.Range
-              min={tezRangeStep}
+              min={step}
               max={maxTez}
-              step={tezRangeStep}
+              step={step}
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
