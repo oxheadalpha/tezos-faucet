@@ -79,9 +79,12 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  const validateAmount = (amount: number) =>
+    amount >= minTez && amount <= maxTez
+
   const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value.slice(0, 16))
-    if (value >= minTez && value <= maxTez) {
+    if (value === 0 || validateAmount(value)) {
       setAmount(value)
     }
   }
@@ -281,7 +284,11 @@ export default function FaucetRequestButton({
           </Col>
 
           <Col xs={12} sm={6} className="d-flex justify-content-sm-end">
-            <Button variant="primary" disabled={disabled} onClick={getTez}>
+            <Button
+              variant="primary"
+              disabled={disabled || !validateAmount(amount)}
+              onClick={getTez}
+            >
               <DropletFill />
               &nbsp;
               {isLocalLoading
