@@ -6,6 +6,7 @@ import ReCAPTCHA from "react-google-recaptcha"
 
 import PowWorker from "../../powWorker?worker&inline"
 import Config from "../../Config"
+import { autoSelectInputText } from "../../lib/Utils"
 import {
   Challenge,
   ChallengeResponse,
@@ -15,6 +16,24 @@ import {
 } from "../../lib/Types"
 
 const { minTez, maxTez } = Config.application
+// Compute the step for the Tezos amount range slider.
+const tezRangeStep = (() => {
+  const magnitude = Math.floor(Math.log10(maxTez))
+
+  // When maxTez is greater than 1
+  if (maxTez > 1) {
+    return Math.max(0.5, Math.pow(10, magnitude - 2))
+  }
+
+  // When maxTez is less than or equal to 1 and minTez is fractional
+  const minMagnitude = Math.abs(Math.floor(Math.log10(minTez)))
+  return Math.max(0.001, 1 / Math.pow(10, minMagnitude))
+})()
+
+const formatAmount = (amount: number) =>
+  amount.toLocaleString(undefined, {
+    maximumFractionDigits: 5,
+  })
 
 export default function FaucetRequestButton({
   address,
@@ -28,9 +47,16 @@ export default function FaucetRequestButton({
   status: StatusContext
 }) {
   const [amount, setAmount] = useState<number>(minTez)
-  const formattedAmount = amount.toLocaleString()
+  const formattedAmount = formatAmount(amount)
+
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)
   const recaptchaRef: RefObject<ReCAPTCHA> = useRef(null)
+
+  // Ensure that `isLocalLoading` is false if user canceled pow worker.
+  // `status.isLoading` will be false.
+  useEffect(() => {
+    !status.isLoading && setLocalLoading(false)
+  }, [status.isLoading])
 
   const startLoading = () => {
     status.setLoading(true)
@@ -53,23 +79,28 @@ export default function FaucetRequestButton({
     setLocalLoading(false)
   }
 
+  const validateAmount = (amount: number) =>
+    amount >= minTez && amount <= maxTez
+
   const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value)
-    if (value >= minTez && value <= maxTez) {
+    const value = Number(e.target.value.slice(0, 16))
+    if (value === 0 || validateAmount(value)) {
       setAmount(value)
     }
   }
+
+  const validateChallenge = (data: Partial<Challenge>): data is Challenge =>
+    !!(
+      data.challenge &&
+      data.difficulty &&
+      data.challengeCounter &&
+      data.challengesNeeded
+    )
 
   const getProgress = (challengeCounter: number, challengesNeeded: number) =>
     String(
       Math.min(99, Math.floor((challengeCounter / challengesNeeded) * 100))
     )
-
-  // Ensure that `isLocalLoading` is false if user canceled pow worker.
-  // `status.isLoading` will be false.
-  useEffect(() => {
-    !status.isLoading && setLocalLoading(false)
-  }, [status.isLoading])
 
   const execCaptcha = async () => {
     const captchaToken: any = await recaptchaRef.current?.executeAsync()
@@ -111,29 +142,17 @@ export default function FaucetRequestButton({
         return verifySolution({ solution: "", nonce: 0 })
       }
 
-      let { challenge, difficulty, challengeCounter, challengesNeeded } =
-        await getChallenge()
+      let challengeRes = await getChallenge()
 
       const powWorker = new PowWorker()
       status.setPowWorker(powWorker)
 
       try {
-        while (
-          challenge &&
-          difficulty &&
-          challengeCounter &&
-          challengesNeeded
-        ) {
-          const powSolution = await solvePow(
-            { challenge, difficulty, challengeCounter, challengesNeeded },
-            powWorker
-          )
+        while (validateChallenge(challengeRes)) {
+          const powSolution = await solvePow(challengeRes, powWorker)
 
-          const response = await verifySolution(powSolution)
-          challenge = response.challenge
-          difficulty = response.difficulty
-          challengeCounter = response.challengeCounter
-          challengesNeeded = response.challengesNeeded
+          const newChallengeRes = await verifySolution(powSolution)
+          challengeRes = newChallengeRes
         }
       } finally {
         powWorker.terminate()
@@ -162,7 +181,7 @@ export default function FaucetRequestButton({
         { timeout: 5000 }
       )
 
-      if (data.challenge && data.difficulty && data.challengeCounter) {
+      if (validateChallenge(data)) {
         return data
       } else {
         stopLoadingError(data?.message || "Error getting challenge")
@@ -195,7 +214,7 @@ export default function FaucetRequestButton({
       )
 
       // If there is another challenge
-      if (data.challenge && data.difficulty && data.challengeCounter) {
+      if (validateChallenge(data)) {
         return data
       } else if (data.txHash) {
         // All challenges were solved
@@ -217,28 +236,7 @@ export default function FaucetRequestButton({
     return {}
   }
 
-  const computeStep = () => {
-    const magnitude = Math.floor(Math.log10(maxTez))
-
-    switch (magnitude) {
-      case 1:
-      case 2:
-        return 1
-      case 3:
-        return 10
-      case 4:
-        return 100
-      case 5:
-        return 1_000
-      case 6:
-        return 10_000
-      default:
-        return 100_000
-    }
-  }
-
-  const currentStep = computeStep()
-  const adjustedMin = Math.ceil(minTez / currentStep) * currentStep
+  const step = amount === tezRangeStep ? minTez : tezRangeStep
 
   return (
     <>
@@ -253,16 +251,14 @@ export default function FaucetRequestButton({
         <Form.Label>Select Tez Amount</Form.Label>
         <Row className="mb-2">
           <Col xs="auto" className="pe-0">
-            <Form.Label className="fw-bold">
-              {minTez.toLocaleString()}
-            </Form.Label>
+            <Form.Label className="fw-bold">{formatAmount(minTez)}</Form.Label>
           </Col>
 
           <Col>
             <Form.Range
-              min={adjustedMin}
+              min={step}
               max={maxTez}
-              step={currentStep}
+              step={step}
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
@@ -270,9 +266,7 @@ export default function FaucetRequestButton({
           </Col>
 
           <Col xs="auto" className="ps-0">
-            <Form.Label className="fw-bold">
-              {maxTez.toLocaleString()}
-            </Form.Label>
+            <Form.Label className="fw-bold">{formatAmount(maxTez)}</Form.Label>
           </Col>
         </Row>
 
@@ -285,12 +279,16 @@ export default function FaucetRequestButton({
               value={amount}
               disabled={disabled}
               onChange={updateAmount}
-              onFocus={(e) => e.target.select()}
+              onClick={autoSelectInputText}
             />
           </Col>
 
           <Col xs={12} sm={6} className="d-flex justify-content-sm-end">
-            <Button variant="primary" disabled={disabled} onClick={getTez}>
+            <Button
+              variant="primary"
+              disabled={disabled || !validateAmount(amount)}
+              onClick={getTez}
+            >
               <DropletFill />
               &nbsp;
               {isLocalLoading

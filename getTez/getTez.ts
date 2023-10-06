@@ -308,6 +308,10 @@ const verifySolution = async ({
 }
 
 /* Entrypoint */
+const formatAmount = (amount: number) =>
+  amount.toLocaleString(undefined, {
+    maximumFractionDigits: 7,
+  })
 
 const getTez = async (args: GetTezArgs) => {
   const validatedArgs = await validateArgs(args)
@@ -317,7 +321,11 @@ const getTez = async (args: GetTezArgs) => {
   )
 
   if (!(args.amount >= minTez && args.amount <= maxTez)) {
-    handleError(`Amount must be between ${minTez} and ${maxTez} tez.`)
+    handleError(
+      `Amount must be between ${formatAmount(minTez)} and ${formatAmount(
+        maxTez
+      )} tez.`
+    )
   }
 
   if (!challengesEnabled) {
