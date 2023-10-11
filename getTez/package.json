@@ -1,6 +1,6 @@
 {
   "name": "@oxheadalpha/get-tez",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Programmatic script to get Tezos from faucet",
   "main": "dist/getTez.js",
   "types": "dist/getTez.d.ts",
