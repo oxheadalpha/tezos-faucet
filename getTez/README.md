@@ -53,10 +53,10 @@ const txHash = await getTez({
 
 ### CLI
 
-You can also run the script directly from the command line with Node.js. When you install the package via npm, the JavaScript file will be located at `node_modules/@oxheadalpha/get-tez/dist/getTez.js`. You can run it with the following command:
+You can also run `get-tez` directly from the command line with `npx`:
 
 ```bash
-node node_modules/@oxheadalpha/get-tez tz1... --amount 10 --network ghostnet
+npx @oxheadalpha/get-tez tz1... --amount 10 --network ghostnet
 ```
 
 Run the script with the `--help` flag for more information.

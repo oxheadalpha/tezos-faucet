@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as crypto from "crypto"
 
 const isMainModule = require.main === module
@@ -26,7 +28,7 @@ const [time, timeLog, timeEnd] = [
 )
 
 const displayHelp = () => {
-  log(`CLI Usage: node getTez.js [options] <address>
+  log(`CLI Usage: npx @oxheadalpha/get-tez [options] <address>
 Options:
   -h, --help                Display help information.
   -a, --amount     <value>  The amount of Tez to request.
