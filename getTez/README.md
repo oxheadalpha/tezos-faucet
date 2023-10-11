@@ -1,6 +1,6 @@
 # get-tez
 
-This zero dependency package provides a programmatic interface to interact with the [Tezos faucet](https://github.com/oxheadalpha/tezos-faucet-backend). It is a script that can be run from a JavaScript/Typescript program or directly from a shell.
+This zero dependency package provides a programmatic interface to interact with the [Tezos faucet](https://github.com/oxheadalpha/tezos-faucet-backend). It is a script that can be run from a JavaScript/Typescript program or directly from a shell. Your NodeJS version should support the [`fetch`](https://nodejs.org/dist/latest-v18.x/docs/api/globals.html#fetch) api.
 
 ## Installation
 
@@ -38,6 +38,7 @@ const txHash = await getTez({
   amount: 10,
   network: "ghostnet",
 })
+// txHash: ooaEskbj...
 ```
 
 Example using the `faucetUrl` parameter:
@@ -47,6 +48,7 @@ const txHash = await getTez({
   amount: 10,
   faucetUrl: "https://my-custom-faucet-url.com",
 })
+// txHash: ooaEskbj...
 ```
 
 ### CLI
@@ -54,7 +56,7 @@ const txHash = await getTez({
 You can also run the script directly from the command line with Node.js. When you install the package via npm, the JavaScript file will be located at `node_modules/@oxheadalpha/get-tez/dist/getTez.js`. You can run it with the following command:
 
 ```bash
-node node_modules/@oxheadalpha/get-tez/dist/getTez.js tz1... --amount 10 --network ghostnet
+node node_modules/@oxheadalpha/get-tez tz1... --amount 10 --network ghostnet
 ```
 
 Run the script with the `--help` flag for more information.

@@ -138,7 +138,7 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
   if (!args.faucetUrl) {
     const teztnetsUrl = "https://teztnets.xyz/teztnets.json"
     const response = await fetch(teztnetsUrl, {
-      signal: AbortSignal.timeout(2000),
+      signal: AbortSignal.timeout(5000),
     })
 
     if (!response.ok) {
@@ -178,7 +178,7 @@ const getInfo = async (faucetUrl: string) => {
 
   const response = await fetch(`${faucetUrl}/info`, {
     headers: requestHeaders,
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(5000),
   })
 
   const body = await response.json()
@@ -198,7 +198,7 @@ const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   const response = await fetch(`${faucetUrl}/challenge`, {
     method: "POST",
     headers: requestHeaders,
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(5000),
     body: `address=${address}&amount=${amount}`,
   })
 
@@ -283,7 +283,7 @@ const verifySolution = async ({
   const response = await fetch(`${faucetUrl}/verify`, {
     method: "POST",
     headers: requestHeaders,
-    signal: AbortSignal.timeout(2000),
+    signal: AbortSignal.timeout(5000),
     body: `address=${address}&amount=${amount}&nonce=${nonce}&solution=${solution}`,
   })
 
