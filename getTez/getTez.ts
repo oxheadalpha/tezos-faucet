@@ -170,7 +170,7 @@ const requestHeaders = {
   // `fetch` by default sets "Connection: keep-alive" header. Was causing
   // ECONNRESET errors with localhost.
   Connection: "close",
-  "Content-Type": "application/x-www-form-urlencoded",
+  "Content-Type": "application/json",
 }
 
 /* Get Info */
@@ -201,7 +201,7 @@ const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
     method: "POST",
     headers: requestHeaders,
     signal: AbortSignal.timeout(5000),
-    body: `address=${address}&amount=${amount}`,
+    body: JSON.stringify({ address, amount }),
   })
 
   const body = await response.json()
@@ -286,7 +286,7 @@ const verifySolution = async ({
     method: "POST",
     headers: requestHeaders,
     signal: AbortSignal.timeout(5000),
-    body: `address=${address}&amount=${amount}&nonce=${nonce}&solution=${solution}`,
+    body: JSON.stringify({ address, amount, nonce, solution }),
   })
 
   const { txHash, challenge, challengeCounter, difficulty, message } =
