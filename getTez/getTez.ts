@@ -46,7 +46,7 @@ const DISPLAY_HELP = isMainModule && true
 
 const handleError = (message: string, help?: boolean) => {
   if (isMainModule) {
-    log(`ERROR: ${message}`, "\n")
+    log(`ERROR: ${message}\n`)
     help && displayHelp()
     process.exit(1)
   } else {
@@ -145,7 +145,7 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
   if (!args.faucetUrl) {
     const teztnetsUrl = "https://teztnets.xyz/teztnets.json"
     const response = await fetch(teztnetsUrl, {
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10_000),
     })
 
     if (!response.ok) {
@@ -185,7 +185,7 @@ const getInfo = async (faucetUrl: string) => {
 
   const response = await fetch(`${faucetUrl}/info`, {
     headers: requestHeaders,
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(10_000),
   })
 
   const body = await response.json()
@@ -205,7 +205,7 @@ const getChallenge = async ({ address, amount, faucetUrl }: ValidatedArgs) => {
   const response = await fetch(`${faucetUrl}/challenge`, {
     method: "POST",
     headers: requestHeaders,
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({ address, amount }),
   })
 
@@ -290,7 +290,7 @@ const verifySolution = async ({
   const response = await fetch(`${faucetUrl}/verify`, {
     method: "POST",
     headers: requestHeaders,
-    signal: AbortSignal.timeout(5000),
+    signal: AbortSignal.timeout(10_000),
     body: JSON.stringify({ address, amount, nonce, solution }),
   })
 
@@ -321,51 +321,59 @@ const formatAmount = (amount: number) =>
   })
 
 const getTez = async (args: GetTezArgs) => {
-  const validatedArgs = await validateArgs(args)
+  try {
+    const validatedArgs = await validateArgs(args)
 
-  const { challengesEnabled, minTez, maxTez } = await getInfo(
-    validatedArgs.faucetUrl
-  )
-
-  if (!(args.amount >= minTez && args.amount <= maxTez)) {
-    handleError(
-      `Amount must be between ${formatAmount(minTez)} and ${formatAmount(
-        maxTez
-      )} tez.`
+    const { challengesEnabled, minTez, maxTez } = await getInfo(
+      validatedArgs.faucetUrl
     )
-  }
 
-  if (!challengesEnabled) {
-    const txHash = (
-      await verifySolution({ solution: "", nonce: 0, ...validatedArgs })
-    )?.txHash
-    return txHash
-  }
+    if (!(args.amount >= minTez && args.amount <= maxTez)) {
+      handleError(
+        `Amount must be between ${formatAmount(minTez)} and ${formatAmount(
+          maxTez
+        )} tez.`
+      )
+    }
 
-  let { challenge, difficulty, challengeCounter, challengesNeeded } =
-    await getChallenge(validatedArgs)
-
-  time("getTez time")
-
-  while (challenge && difficulty && challengeCounter && challengesNeeded) {
-    verboseLog({ challenge, difficulty, challengeCounter })
-
-    const { solution, nonce } = solveChallenge({
-      challenge,
-      difficulty,
-      challengeCounter,
-      challengesNeeded,
-    })
-
-    verboseLog({ nonce, solution })
-
-    let txHash
-    ;({ challenge, difficulty, challengeCounter, txHash } =
-      await verifySolution({ solution, nonce, ...validatedArgs }))
-
-    if (txHash) {
-      timeEnd("getTez time")
+    if (!challengesEnabled) {
+      const txHash = (
+        await verifySolution({ solution: "", nonce: 0, ...validatedArgs })
+      )?.txHash
       return txHash
+    }
+
+    let { challenge, difficulty, challengeCounter, challengesNeeded } =
+      await getChallenge(validatedArgs)
+
+    time("getTez time")
+
+    while (challenge && difficulty && challengeCounter && challengesNeeded) {
+      verboseLog({ challenge, difficulty, challengeCounter })
+
+      const { solution, nonce } = solveChallenge({
+        challenge,
+        difficulty,
+        challengeCounter,
+        challengesNeeded,
+      })
+
+      verboseLog({ nonce, solution })
+
+      let txHash
+      ;({ challenge, difficulty, challengeCounter, txHash } =
+        await verifySolution({ solution, nonce, ...validatedArgs }))
+
+      if (txHash) {
+        timeEnd("getTez time")
+        return txHash
+      }
+    }
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      handleError("Connection timeout. Please try again.")
+    } else {
+      throw err
     }
   }
 }
