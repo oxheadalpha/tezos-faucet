@@ -15,6 +15,12 @@ import {
   VerifyResponse,
 } from "../../lib/Types"
 
+export const api = axios.create({
+  baseURL: Config.application.backendUrl,
+  timeout: 10_000,
+  timeoutErrorMessage: "Connection timeout exceeded. Please try again.",
+})
+
 const { minTez, maxTez } = Config.application
 // Compute the step for the Tezos amount range slider.
 const tezRangeStep = (() => {
@@ -175,10 +181,9 @@ export default function FaucetRequestButton({
         captchaToken,
       }
 
-      const { data }: { data: ChallengeResponse } = await axios.post(
-        `${Config.application.backendUrl}/challenge`,
-        input,
-        { timeout: 5000 }
+      const { data }: { data: ChallengeResponse } = await api.post(
+        "/challenge",
+        input
       )
 
       if (validateChallenge(data)) {
@@ -187,7 +192,9 @@ export default function FaucetRequestButton({
         stopLoadingError(data?.message || "Error getting challenge")
       }
     } catch (err: any) {
-      stopLoadingError(err?.response?.data.message || "Error getting challenge")
+      stopLoadingError(
+        err?.response?.data.message || err?.message || "Error getting challenge"
+      )
     }
     return {}
   }
@@ -207,10 +214,9 @@ export default function FaucetRequestButton({
     }
 
     try {
-      const { data }: { data: VerifyResponse } = await axios.post(
-        `${Config.application.backendUrl}/verify`,
-        input,
-        { timeout: 5000 }
+      const { data }: { data: VerifyResponse } = await api.post(
+        "/verify",
+        input
       )
 
       // If there is another challenge
@@ -231,7 +237,9 @@ export default function FaucetRequestButton({
         stopLoadingError("Error verifying solution")
       }
     } catch (err: any) {
-      stopLoadingError(err?.response?.data.message || err.message)
+      stopLoadingError(
+        err?.response?.data.message || err?.message || err.message
+      )
     }
     return {}
   }
