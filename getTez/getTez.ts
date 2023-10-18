@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as crypto from "crypto"
+import * as pkgJson from "./package.json"
 
 const isMainModule = require.main === module
 
@@ -37,7 +38,8 @@ Options:
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
   -t, --time                Enable PoW challenges timer.
-  -v, --verbose             Enable verbose logging.`)
+  -v, --verbose             Enable verbose logging.
+      --version             Log the package version.`)
 }
 
 const DISPLAY_HELP = isMainModule && true
@@ -110,6 +112,9 @@ const parseCliArgs = (args: string | string[]) => {
       case "--time":
         TIME = true
         break
+      case "--version":
+        log(pkgJson.version)
+        process.exit(0)
       default:
         parsedArgs.address = arg || ""
         break
@@ -366,11 +371,13 @@ const getTez = async (args: GetTezArgs) => {
 }
 
 if (isMainModule) {
-  log("getTez.js by Oxhead Alpha - Get Free Tez\n")
   // If the file is executed directly by node and not via import then argv will
   // include the file name.
   const args = process.argv.slice(isMainModule ? 2 : 1)
   const parsedArgs = parseCliArgs(args)
+
+  log(`get-tez v${pkgJson.version} by Oxhead Alpha - Get Free Tez\n`)
+
   getTez(parsedArgs).then(
     (txHash) => txHash && process.stdout.write("\n" + txHash)
   )
