@@ -26,7 +26,7 @@ import getTez from "@oxheadalpha/get-tez"
 
 You can then use the `getTez` function to interact with the Tezos faucet. The function takes an object as an argument, with the following properties:
 
-- `address`: The address to send Tez to.
+- `address`: The address to send Tez to. This can be a raw Tezos public key hash or a local address's alias.
 - `amount`: The amount of Tez to request.
 - `network`: The faucet's network name. Must match a network name with a faucet listed at https://teztnets.xyz. Ignored if `faucetUrl` is set.
 - `faucetUrl`: The custom faucet URL. Ignores `network`.
