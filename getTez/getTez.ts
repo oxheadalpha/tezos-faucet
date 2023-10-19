@@ -71,7 +71,7 @@ type GetTezArgs = {
   time?: boolean
 }
 
-const parseCliArgs = (args: string | string[]) => {
+const parseCliArgs = (args: string | string[]): GetTezArgs => {
   if (typeof args === "string") args = args.split(" ")
 
   const parsedArgs: GetTezArgs = {
@@ -116,7 +116,11 @@ const parseCliArgs = (args: string | string[]) => {
         log(pkgJson.version)
         process.exit(0)
       default:
-        parsedArgs.address = arg || ""
+        if (!parsedArgs.address) {
+          parsedArgs.address = arg || ""
+        } else {
+          handleError(`Unexpected argument provided '${arg}'.`, DISPLAY_HELP)
+        }
         break
     }
   }
