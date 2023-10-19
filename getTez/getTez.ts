@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-
 import * as crypto from "crypto"
+import * as fs from "fs"
+import * as path from "path"
 import * as pkgJson from "./package.json"
 
 const isMainModule = require.main === module
@@ -30,6 +31,13 @@ const [time, timeLog, timeEnd] = [
 
 const displayHelp = () => {
   log(`CLI Usage: npx @oxheadalpha/get-tez [options] <address>
+
+<address>:
+  The address where Tez should be sent. This can be either a standard Tezos public key hash (e.g. tz1234abc...)
+  or a local alias. If an alias is provided (e.g., 'alice'), the program will attempt to resolve it to a public
+  key hash by looking it up in the specified client directory (set by --client-dir or by the TEZOS_CLIENT_DIR
+  environment variable). If neither is set, the default lookup location is $HOME/.tezos-client/public_key_hashes.
+
 Options:
   -h, --help                Display help information.
   -a, --amount     <value>  The amount of Tez to request.
@@ -37,6 +45,7 @@ Options:
                             network name with a faucet listed at https://teztnets.xyz.
                             Ignored if --faucet-url is set.
   -f, --faucet-url <value>  Set the custom faucet URL. Ignores --network.
+  -d, --client-dir <value>  Custom client directory path to look up an address alias.
   -t, --time                Enable PoW challenges timer.
   -v, --verbose             Enable verbose logging.
       --version             Log the package version.`)
@@ -55,11 +64,30 @@ const handleError = (message: string, help?: boolean) => {
   }
 }
 
+const DEFAULT_CLIENT_DIR =
+  process.env.TEZOS_CLIENT_DIR || path.join(process.env.HOME!, ".tezos-client")
+
+const resolveAliasToPkh = (
+  alias: string,
+  clientDir: string = DEFAULT_CLIENT_DIR
+): string | null => {
+  const pkhsFilePath = path.join(clientDir, "public_key_hashs")
+  if (fs.existsSync(pkhsFilePath)) {
+    const pkhsData: Array<{ name: string; value: string }> = JSON.parse(
+      fs.readFileSync(pkhsFilePath, "utf8")
+    )
+    return pkhsData.find(({ name }) => name === alias)?.value || null
+  }
+  return null
+}
+
 type GetTezArgs = {
   /** The address to send Tez to. */
   address: string
   /** The amount of Tez to request. */
   amount: number
+  /** Custom client directory path to look up address alias. */
+  clientDir?: string
   /** Set the faucet's network name. Must match a network name with a faucet
    * listed at https://teztnets.xyz. Ignored if `faucetUrl` is set. */
   network?: string
@@ -104,6 +132,14 @@ const parseCliArgs = (args: string | string[]): GetTezArgs => {
       case "--faucet-url":
         parsedArgs.faucetUrl = args.shift() || ""
         break
+      case "-d":
+      case "--client-dir":
+        const clientDir = args.shift()
+        if (!clientDir) {
+          handleError(`The ${arg} flag expects an argument.`, DISPLAY_HELP)
+        }
+        parsedArgs.clientDir = clientDir
+        break
       case "-v":
       case "--verbose":
         VERBOSE = true
@@ -119,7 +155,7 @@ const parseCliArgs = (args: string | string[]): GetTezArgs => {
         if (!parsedArgs.address) {
           parsedArgs.address = arg || ""
         } else {
-          handleError(`Unexpected argument provided '${arg}'.`, DISPLAY_HELP)
+          handleError(`Unexpected argument provided: '${arg}'`, DISPLAY_HELP)
         }
         break
     }
@@ -131,8 +167,19 @@ const parseCliArgs = (args: string | string[]): GetTezArgs => {
 type ValidatedArgs = Required<Omit<GetTezArgs, "verbose" | "time" | "network">>
 
 const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
+  if (args.clientDir && !fs.existsSync(args.clientDir)) {
+    handleError(`Client dir '${args.clientDir}' doesn't exist.`)
+  }
+
   if (!args.address) {
     handleError("Tezos address is required.", DISPLAY_HELP)
+  } else if (!args.address.startsWith("tz")) {
+    const resolvedAddress = resolveAliasToPkh(args.address, args.clientDir)
+    if (!resolvedAddress) {
+      handleError(`Alias '${args.address}' not found.`)
+    } else {
+      args.address = resolvedAddress
+    }
   }
 
   if (!args.amount || args.amount <= 0) {

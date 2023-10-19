@@ -13,6 +13,7 @@ npm install @oxheadalpha/get-tez
 ## Usage
 
 ### JS / TS
+
 After installing the package, you can import it in your Node.js JavaScript or TypeScript project:
 
 ```javascript
@@ -29,6 +30,7 @@ You can then use the `getTez` function to interact with the Tezos faucet. The fu
 - `amount`: The amount of Tez to request.
 - `network`: The faucet's network name. Must match a network name with a faucet listed at https://teztnets.xyz. Ignored if `faucetUrl` is set.
 - `faucetUrl`: The custom faucet URL. Ignores `network`.
+- `clientDir`: (Optional) Specifies a custom client directory path to look up address aliases. If not set, it will default to `$HOME/.tezos-client/` or `$TEZOS_CLIENT_DIR/public_key_hashs` if the `TEZOS_CLIENT_DIR` environment variable is specified.
 
 Here is an example of how to use the `getTez` function:
 
@@ -41,7 +43,19 @@ const txHash = await getTez({
 // txHash: ooaEskbj...
 ```
 
+Using an address alias:
+
+```javascript
+const txHash = await getTez({
+  address: "alice",
+  amount: 10,
+  network: "ghostnet",
+})
+// txHash: ooaEskbj...
+```
+
 Example using the `faucetUrl` parameter:
+
 ```js
 const txHash = await getTez({
   address: "tz1...",
