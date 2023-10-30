@@ -30,7 +30,7 @@ You can then use the `getTez` function to interact with the Tezos faucet. The fu
 - `amount`: The amount of Tez to request.
 - `network`: The faucet's network name. Must match a network name with a faucet listed at https://teztnets.xyz. Ignored if `faucetUrl` is set.
 - `faucetUrl`: The custom faucet URL. Ignores `network`.
-- `clientDir`: (Optional) Specifies a custom client directory path to look up address aliases. If not set, it will default to `$HOME/.tezos-client/` or `$TEZOS_CLIENT_DIR/public_key_hashs` if the `TEZOS_CLIENT_DIR` environment variable is specified.
+- `clientDir`: (Optional) Specifies a custom client directory path to look up an address alias. If not set, it will default to `$HOME/.tezos-client/` or `$TEZOS_CLIENT_DIR` if the `TEZOS_CLIENT_DIR` environment variable is set.
 
 Here is an example of how to use the `getTez` function:
 

@@ -7,9 +7,9 @@ import * as pkgJson from "./package.json"
 const isMainModule = require.main === module
 
 /*
-We use instantiate a "Console" to stderr for logging so that logs are not
-written to stdout when the script is run from the CLI. We want the transaction
-hash to be the only stdout once the Tez is sent to the user.
+We instantiate a "Console" to stderr for logging so that logs are not written to
+stdout when the script is run from the CLI. We want the transaction hash to be
+the only stdout once the Tez is sent to the user.
 */
 import { Console } from "console"
 const console = new Console(isMainModule ? process.stderr : process.stdout)
@@ -35,8 +35,8 @@ const displayHelp = () => {
 <address>:
   The address where Tez should be sent. This can be either a standard Tezos public key hash (e.g. tz1234abc...)
   or a local alias. If an alias is provided (e.g., 'alice'), the program will attempt to resolve it to a public
-  key hash by looking it up in the specified client directory (set by --client-dir or by the TEZOS_CLIENT_DIR
-  environment variable). If neither is set, the default lookup location is $HOME/.tezos-client/public_key_hashes.
+  key hash by looking it up in the specified client directory, set by --client-dir or by the TEZOS_CLIENT_DIR
+  environment variable. If neither is set, the default lookup location is $HOME/.tezos-client.
 
 Options:
   -h, --help                Display help information.
