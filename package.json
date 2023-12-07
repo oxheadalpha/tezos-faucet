@@ -5,7 +5,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@airgap/beacon-sdk": "^4.0.8",
+    "@airgap/beacon-sdk": "^4.0.12",
     "@taquito/beacon-wallet": "^17.2.0",
     "@taquito/signer": "^17.2.0",
     "@taquito/taquito": "^17.2.0",
