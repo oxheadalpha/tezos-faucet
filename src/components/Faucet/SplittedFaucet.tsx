@@ -8,6 +8,7 @@ import Config from "../../Config"
 
 import { Network, UserContext, StatusContext } from "../../lib/Types"
 
+const { minTez, maxTez } = Config.application
 export default function SplittedFaucet({
   network,
   user,
@@ -27,6 +28,8 @@ export default function SplittedFaucet({
   const [showInfo, setShowInfo] = useState(
     localStorage.getItem("showInfo") !== "false"
   )
+  const [amount, setAmount] = useState<number>(minTez)
+  const [inputToAddr, setInputToAddr] = useState<string>("")
 
   const unsetStatus = () => (setStatus(""), setStatusType(""))
 
@@ -79,13 +82,24 @@ export default function SplittedFaucet({
               network={network}
               user={user}
               status={statusContext}
+              amount={amount}
+              setAmount={setAmount}
+              inputToAddr={inputToAddr}
+              setInputToAddr={setInputToAddr}
             />
           </Col>
           <Col md={6} className="faucet-part">
             <Card.Text className="faucet-part-title">
               Fund any address
             </Card.Text>
-            <FaucetToInputRequest network={network} status={statusContext} />
+            <FaucetToInputRequest
+              network={network}
+              status={statusContext}
+              amount={amount}
+              setAmount={setAmount}
+              inputToAddr={inputToAddr}
+              setInputToAddr={setInputToAddr}
+            />
           </Col>
         </Row>
 
@@ -148,24 +162,19 @@ export default function SplittedFaucet({
 
             <Alert show={showInfo} variant="secondary" className="mt-3">
               <p>
-                To ensure fair distribution of Tez, we've introduced proof of
-                work challenges. Before you receive your Tez, your browser will
-                need to solve these challenges. This is an automatic process
-                that helps us prevent abuse and ensure everyone gets their fair
-                share.
+                Tired of captchas? Need to fund a lot of addresses?
               </p>
               <p>
-                The number and difficulty of these challenges depends on the
-                amount of Tez you request. The more Tez you ask for, the higher
-                the difficulty and the more challenges your browser will need to
-                solve. This means it might take a bit longer to receive your Tez
-                if you request a larger amount.
+                💡 Try the <a href="https://forum.tezosagora.org/t/programmatic-faucet/5804" target="_blank"><b>get-tez</b></a> command!
               </p>
               <p>
-                Don't worry, your browser will automatically solve these
-                challenges. All you need to do is leave your window open and
-                wait a little while for the process to complete before you
-                receive your Tez.
+                <code>npx @oxheadalpha/get-tez {inputToAddr || '<your-address>'} --amount {amount} --network {network.name.toLowerCase()}</code>
+              </p>
+              <p>
+                You can also request tokens with the <a href="https://www.npmjs.com/package/@oxheadalpha/get-tez" target="_blank">get-tez NodeJS library</a> or directly through the <a href="https://github.com/oxheadalpha/tezos-faucet-backend#api-endpoints" target="_blank">API</a>.
+              </p>
+              <p>
+                Note: to prevent abuse, tokens are granted more slowly when using this method.
               </p>
 
               <hr />

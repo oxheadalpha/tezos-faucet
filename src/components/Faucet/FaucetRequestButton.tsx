@@ -46,13 +46,16 @@ export default function FaucetRequestButton({
   disabled,
   network,
   status,
+  amount,
+  setAmount
 }: {
   address: string
   disabled: boolean
   network: Network
   status: StatusContext
+  amount: number
+  setAmount: (amount: number) => void
 }) {
-  const [amount, setAmount] = useState<number>(minTez)
   const formattedAmount = formatAmount(amount)
 
   const [isLocalLoading, setLocalLoading] = useState<boolean>(false)

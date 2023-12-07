@@ -51,14 +51,13 @@ Currently supported networks include:
 - Mondaynet
 - Dailynet
 - Nairobinet
+- Oxfordnet
 
 To add a new network, first check that `@airgap/beacon-sdk` handles it ([check their config on the latest release](https://github.com/airgap-it/beacon-sdk/blob/v4.0.6/packages/beacon-types/src/types/beacon/NetworkType.ts)), then update:
 
 ```
 npm i @airgap/beacon-sdk
 ```
-
-And in `Config.tsx`, add the `case` for the new network using `NetworkType`.
 
 ### 2. Deploy backend
 

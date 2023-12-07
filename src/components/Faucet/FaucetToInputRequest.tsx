@@ -9,11 +9,19 @@ import { Network, StatusContext } from "../../lib/Types"
 export default function FaucetToInputRequest({
   network,
   status,
+  amount,
+  setAmount,
+  inputToAddr,
+  setInputToAddr
 }: {
   network: Network
   status: StatusContext
+  amount: number
+  setAmount: (amount: number) => void
+  inputToAddr: any
+  setInputToAddr: any
+
 }) {
-  const [inputToAddr, setInputToAddr] = useState<string>("")
   const [inputClass, setInputClass] = useState<string>("")
 
   const inputId: string = network.name + "-to"
@@ -54,6 +62,8 @@ export default function FaucetToInputRequest({
         disabled={disableButton}
         network={network}
         status={status}
+        amount={amount}
+        setAmount={setAmount}
       />
     </>
   )
