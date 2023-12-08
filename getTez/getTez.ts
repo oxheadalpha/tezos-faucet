@@ -435,7 +435,7 @@ if (isMainModule) {
   log(`get-tez v${pkgJson.version} by Oxhead Alpha - Get Free Tez\n`)
 
   getTez(parsedArgs).then(
-    (txHash) => txHash && process.stdout.write("\n" + txHash)
+    (txHash) => txHash && process.stdout.write("- Transfer done!\nOperation hash: " + txHash + "\n")
   )
 }
 
