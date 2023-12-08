@@ -223,9 +223,6 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
 }
 
 const requestHeaders = {
-  // `fetch` by default sets "Connection: keep-alive" header. Was causing
-  // ECONNRESET errors with localhost.
-  Connection: "close",
   "Content-Type": "application/json",
 }
 
@@ -412,8 +409,8 @@ const getTez = async (args: GetTezArgs) => {
       verboseLog({ nonce, solution })
 
       let txHash
-      ;({ challenge, difficulty, challengeCounter, txHash } =
-        await verifySolution({ solution, nonce, ...validatedArgs }))
+        ; ({ challenge, difficulty, challengeCounter, txHash } =
+          await verifySolution({ solution, nonce, ...validatedArgs }))
 
       if (txHash) {
         timeEnd("getTez time")
