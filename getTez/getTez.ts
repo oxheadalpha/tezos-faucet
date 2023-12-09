@@ -223,6 +223,9 @@ const validateArgs = async (args: GetTezArgs): Promise<ValidatedArgs> => {
 }
 
 const requestHeaders = {
+  // To make it work with localhost, uncomment this.
+  // But it breaks older versions of node.
+  //Connection: "close",
   "Content-Type": "application/json",
 }
 
@@ -435,7 +438,8 @@ if (isMainModule) {
   log(`get-tez v${pkgJson.version} by Oxhead Alpha - Get Free Tez\n`)
 
   getTez(parsedArgs).then(
-    (txHash) => txHash && process.stdout.write("- Transfer done!\nOperation hash: " + txHash + "\n")
+    (txHash) => txHash && process.stderr.write("- Transfer done!\nOperation hash: ") &&
+      process.stdout.write(txHash) && process.stderr.write("\n")
   )
 }
 
